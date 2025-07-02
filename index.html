@@ -4,11 +4,73 @@
 <head>
     <meta charset="utf-8">
     <title>Xcally Chat!</title>
+    <link rel="stylesheet" href="chat_window_style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 </head>
 
 <body>
-    Bienvenido ¡Empieza a chatear ya!
-    <script src="https://oltpsys.com:443/api/chat/websites/7/snippet?token=XYoiMEX3uHUuSy9UwVFnxGRhxLcOw4O3"></script>
+    <section class="chat-window">
+        <div class="start-button-container">
+            <div class="start-button-tooltip">
+                ¡Hola! Soy Bank, en qué puedo ayudarle.
+            </div>
+            <div class="start-button-text">
+                <p class="start-button-text">Chatea con nosotros</p>
+            </div>
+            <div class="start-button-image-container">
+                <img src="https://pbs.twimg.com/profile_images/566331671541075969/2n4YRrEn_400x400.jpeg"
+                    class="start-button-image" />
+            </div>
+        </div>
+        <div class="chat-popup">
+            <div class="chat-popup-toolbar">
+                <button class="close-button">
+                    <i class="material-icons close-button-icon"> close </i>
+                </button>
+                <button class="minimize-button">
+                    <span class="material-icons minimize-button-icon">
+                        expand_more
+                    </span>
+                </button>
+            </div>
+            <div class="super-chat-area">
+                <div class="chat-cover">
+                    <div class="chat-cover-form">
+                        <span class="chat-cover-text">Bienvenidos a nuestro chat</span>
+                        <div class="chat-cover-input-container">
+                            <div class="dropdown" id="chat-cover-input-dropdown">
+                                <div class="dropdown-toggle" id="chat-cover-input-dropdown-toggle">
+                                    <span id="chat-cover-input-dropdown-selected-value">V</span>
+                                    <span>&#9662;</span>
+                                </div>
+                                <div class="dropdown-menu" id="chat-cover-input-dropdown-menu">
+                                    <div class="dropdown-item">E</div>
+                                    <div class="dropdown-item">P</div>
+                                    <div class="dropdown-item">J</div>
+                                    <div class="dropdown-item">G</div>
+                                    <div class="dropdown-item">C</div>
+                                </div>
+                            </div>
+                            <input class="text" id="chat-cover-input-text">
+                            </input>
+                        </div>
+                        <div class="chat-cover-button">
+                            Iniciar chat
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-area"></div>
+                <div class="input-area">
+                    <input type="text" class="input-area-text" placeholder="Escribe tu pregunta" id="cht-wndw-txt-ntr"
+                        onfocus="moveSubmitLeft();" onblur="moveSubmitRight();" />
+                    <button class="input-area-submit" id="cht-wndw-sbmt">
+                        <i class="material-icons send-icon"> send </i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script src="chat_window_app.js"></script>
+    </section>
 </body>
 
 </html>
