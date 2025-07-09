@@ -16,40 +16,44 @@ let chatPopup = document.querySelector(".chat-popup"),
     chatCoverListValue = document.getElementById("chat-cover-input-dropdown-selected-value"),
     chatCoverTextInput = document.getElementById("chat-cover-input-text");
 
+let xcallyWebSocket = null;
+
 let userID; // this is used to identify the user on the CC server;
 
-const contactCenterURL = "https://oltpsys.com/api/openchannel/accounts/8/notify",
-      contactManagerIDField = "cf_7";  
+function serverConnect() {
+    function appendMessage(text) {
+        const serverMessage = `<div class="server-message-container">
+        <span class="server-message">${text}}</span>
+        </div>`;
+        chatArea.insertAdjacentHTML("beforeend", serverMessage);
+        updateScroll();
+    };
+    xcallyWebSocket = io("https://cx.oltpsys.com", {
+        path: "/webChat/chatSocket/"
+    });
+    xcallyWebSocket.on("serverMessage", (text) => {
+        appendMessage(text);
+    })
+}
 
-function sendMsg(request) {
-    if (request.text != undefined && userID != undefined) {
-        if (request.text.trim() != "") {
-            let toms = 2000; // timeout in miliseconds
-            const sendBody = {
-                from: userID,
-                body: request.text,
-                mapKey: contactManagerIDField
-            };
-
-            textInput.value = "";
-            fetch(contactCenterURL, { method: "POST", body: sendBody })
-                .then((response) =>
-                    response.json().then((data) => {
-                        console.log(data);
-                        if (data.status === 200) {
-                            let usermsg = `<div class="out-msg">
-    <span class="my-msg">${request.text}</span>
+function sendMsg(textMessage) {
+    let ACK = null;
+    if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
+        if (textMessage.trim() != "") {
+            const contactManagerIDField = "cf_4"
+            xcallyWebSocket.emit("clientMessage", textMessage, userID, contactManagerIDField, (ACK) => {
+                if (ACK === "Communication success"){
+                let usermsg = `<div class="user-message-container">
+    <span class="user-message">${textMessage}</span>
     </div>`;
-
-                            chatArea.insertAdjacentHTML("beforeend", usermsg);
-                            updateScroll();
-                        }
-                    })
-                )
-                .catch((error) => console.log(error));
+                textInput.value = "";
+                chatArea.insertAdjacentHTML("beforeend", usermsg);
+                updateScroll();
+            }
+            })
         }
     } else {
-        console.log("There is a problem with either the user's message or the user's ID");
+        console.log("There is a problem with either the user's message, the user's ID, or the web socket connection");
     }
 }
 
@@ -64,6 +68,7 @@ function checkUserOut() {
         }
     }
     chatPopup.classList.toggle("show");
+    xcallyWebSocket != null ? xcallyWebSocket.emit("disconnect") : null ;
 }
 
 function moveSubmitLeft() {
@@ -117,6 +122,23 @@ window.addEventListener('click', function (event) {
     }
 });
 
+chatCoverTextInput.addEventListener('keydown', (key) => {
+    if (key === "Enter"){
+        let userInput = textInput.value;
+        sendMsg(userInput);
+        moveSubmitRight();
+        chatCoverTextInput.value = "";
+    }
+})
+
+startChatButton.addEventListener("mouseover", () => {
+    if (chatCoverTextInput.value.trim() === "") {
+        startChatButton.classList.remove("conditional-not-opaque-not-working-button");
+    } else {
+        startChatButton.classList.add("conditional-not-opaque-not-working-button");
+    }
+})
+
 chatCoverTextInput.addEventListener("input", () => {
     if (chatCoverTextInput.value.trim() === "") {
         startChatButton.classList.remove("conditional-not-opaque-not-working-button");
@@ -132,7 +154,8 @@ startChatButton.addEventListener("click", () => {
         chatCover.classList.toggle("hide");
         textInput.disabled = false;
         chatArea.innerHTML = "";
-    };
+        serverConnect();
+    } 
 })
 
 chatCoverListToggle.addEventListener('click', function (event) {
@@ -156,23 +179,15 @@ closeChatButton.addEventListener("click", () => {
     checkUserOut();
 });
 
-// triggered when pressing submit msg button
 submitButton.addEventListener("click", () => {
     let userInput = textInput.value;
-    const request = {
-        text: userInput,
-    };
-    sendMsg(request);
+    sendMsg(userInput);
 });
 
-/* triggered when pressing enter in the txt input bar*/
-textInput.addEventListener("keypress", (trigger) => {
+textInput.addEventListener("keydown", (trigger) => {
     if (trigger.key === "Enter") {
         let userInput = textInput.value;
-        const request = {
-            text: userInput,
-        };
-        sendMsg(request);
+        sendMsg(userInput);
         moveSubmitRight();
     }
 });

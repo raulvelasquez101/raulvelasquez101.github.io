@@ -211,13 +211,13 @@
   opacity: 1;
 }
 
-.chat-window .income-msg {
+.chat-window .server-message-container { /*income-msg*/
   display: flex;
   left: 1.5rem;
   right: 3rem;
 }
 
-.chat-window .msg {
+.chat-window .server-message { /*msg*/
   font-size: 14px;
   background-color: #fafafa;
   padding-top: 0.75rem;
@@ -232,20 +232,20 @@
   box-shadow: 0px 1px 4px #d3d3d3;
 }
 
-.chat-window .income-msg .msg p {
+.chat-window .server-message-container .server-message p {
   font-size: 14px;
   text-align: justify;
   margin: 0.5rem;
   word-spacing: 0.15rem;
 }
 
-.chat-window .out-msg {
+.chat-window .user-message-container {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
 
-.chat-window .my-msg {
+.chat-window .user-message {
   display: flex;
   justify-content: flex-end;
   font-size: 14px;
@@ -331,28 +331,6 @@
   margin-bottom: 0.5rem;
 }
 
-.chat-window .contenedor-img-left-tlf-headset {
-  border-bottom-left-radius: 35%;
-  border-bottom-right-radius: 35%;
-  margin-top: 0.5rem;
-}
-
-.chat-window .img-left-comunicacion-unificada,
-.chat-window .img-right-ia,
-.chat-window .img-left-chat-bot,
-.chat-window .img-right-contact-center,
-.chat-window .img-left-interaction-recording,
-.chat-window .img-right-ivr,
-.chat-window .img-left-tlf-headset,
-.chat-window .img-right-hablar-con-agente {
-  color: #19268c;
-}
-
-.chat-window .img-right-contact-center,
-.chat-window .img-right-ia {
-  font-size: 2rem;
-}
-
 .chat-window .texto-botones {
   color: black;
   font-size: 0.8rem;
@@ -367,39 +345,9 @@
   cursor: pointer;
 }
 
-.chat-window .contenedor-img-left-comunicacion-unificada,
-.chat-window .contenedor-img-right-ia,
-.chat-window .contenedor-img-left-chat-bot,
-.chat-window .contenedor-img-right-contact-center,
-.chat-window .contenedor-img-left-interaction-recording,
-.chat-window .contenedor-img-right-ivr,
-.chat-window .contenedor-img-left-tlf-headset,
-.chat-window .contenedor-img-right-hablar-con-agente {
-  display: flex;
-  flex-direction: column;
-  height: 60px;
-  align-items: center;
-  background-color: #ebebeb;
-  justify-content: center;
-}
-
-.chat-window .contenedor-img-left-comunicacion-unificada {
-  border-top-left-radius: 35%;
-}
-
-.chat-window .contenedor-img-right-ia {
-  border-top-right-radius: 35%;
-}
-
 .chat-window .contenedor-btn-si,
 .chat-window .contenedor-btn-no,
 .chat-window .contenedor-btn-agente {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.chat-window .contenedor-product-image {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -410,14 +358,6 @@
 .chat-window .btn-agente {
   margin: 0.1rem;
   font-size: 0.9rem;
-}
-
-.chat-window .product-image {
-  max-height: 50px;
-}
-
-.chat-window .contenedor-product-image:hover .product-image:hover {
-  cursor: pointer;
 }
 
 .chat-window .img-whatsapp {
