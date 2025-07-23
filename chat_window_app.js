@@ -23,7 +23,7 @@ let userID; // this is used to identify the user on the CC server;
 function serverConnect() {
     function appendMessage(text) {
         const serverMessage = `<div class="server-message-container">
-        <span class="server-message">${text}}</span>
+        <span class="server-message">${text}</span>
         </div>`;
         chatArea.insertAdjacentHTML("beforeend", serverMessage);
         updateScroll();
@@ -37,7 +37,6 @@ function serverConnect() {
 }
 
 function sendMsg(textMessage) {
-    let ACK = null;
     if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
         if (textMessage.trim() != "") {
             const contactManagerIDField = "cf_4"
@@ -71,37 +70,37 @@ function checkUserOut() {
     xcallyWebSocket != null ? xcallyWebSocket.emit("disconnect") : null ;
 }
 
-function moveSubmitLeft() {
+function moveSubmitRight() {
     const elem = document.getElementById("cht-wndw-sbmt");
-    if (elem.style.right != "9px") {
+    if (elem.style.left != "6px") {
         let id = null;
-        let pos = -27;
+        let pos = -24;
         clearInterval(id);
         id = setInterval(frame, 5);
         function frame() {
-            if (pos == 9) {
+            if (pos == 6) {
                 clearInterval(id);
             } else {
                 pos++;
-                elem.style.right = pos + "px";
+                elem.style.left = pos + "px";
             }
         }
     }
 }
 
-function moveSubmitRight() {
+function moveSubmitLeft() {
     if (textInput.value?.trim() === "") {
         let id = null;
         const elem = document.getElementById("cht-wndw-sbmt");
-        let pos = 9;
+        let pos = 6;
         clearInterval(id);
         id = setInterval(frame, 5);
         function frame() {
-            if (pos == -27) {
+            if (pos == -24) {
                 clearInterval(id);
             } else {
                 pos--;
-                elem.style.right = pos + "px";
+                elem.style.left = pos + "px";
             }
         }
     }
