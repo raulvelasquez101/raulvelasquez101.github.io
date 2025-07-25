@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <title>Xcally Chat!</title>
     <link rel="stylesheet" href="chat_window_style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
         integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
         crossorigin="anonymous"></script>
@@ -39,7 +39,7 @@
                 <div class="chat-cover">
                     <div class="chat-cover-form">
                         <div class="chat-cover-video-container">
-                            <video class="chat-cover-video" autoplay playsinline>
+                            <video id="chat-cover-video" playsinline>
                                 <source src="hello_video.mp4" type="video/mp4">
                                 Tu navegador web no permite videos, para obtener una experiencia óptima, utiliza esta
                                 ventana de chat a través de un navegador web actualizado

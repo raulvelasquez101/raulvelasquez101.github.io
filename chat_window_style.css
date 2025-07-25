@@ -166,8 +166,8 @@
   height: 300px;
 }
 
-.chat-window .chat-cover-video{
-  height: 100%;
+.chat-window #chat-cover-video{
+  width: 200px;
 }
 
 .chat-window .chat-cover-text {
@@ -288,7 +288,7 @@
   text-align: justify;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 400px) {
 
   .chat-window .chat-popup,
   .chat-window .chat-area {

@@ -14,7 +14,8 @@ let chatPopup = document.querySelector(".chat-popup"),
     chatCoverListToggle = document.getElementById("chat-cover-input-dropdown-toggle"),
     chatCoverListDropdownMenu = document.getElementById("chat-cover-input-dropdown-menu"),
     chatCoverListValue = document.getElementById("chat-cover-input-dropdown-selected-value"),
-    chatCoverTextInput = document.getElementById("chat-cover-input-text");
+    chatCoverTextInput = document.getElementById("chat-cover-input-text"),
+    chatCoverVideo = document.getElementById("chat-cover-video");
 
 let xcallyWebSocket = null;
 
@@ -154,6 +155,8 @@ startChatButton.addEventListener("click", () => {
         chatCover.classList.toggle("hide");
         textInput.disabled = false;
         chatArea.innerHTML = "";
+        chatCoverVideo.pause();
+        chatCoverVideo.currentTime = 0;
         serverConnect();
     } 
 })
@@ -165,10 +168,24 @@ chatCoverListToggle.addEventListener('click', function (event) {
 
 minimizeChatButton.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
+        // 1. Pause the video
+    chatCoverVideo.pause();
+    // 2. Set the current playback time back to the start (0)
+    chatCoverVideo.currentTime = 0;
+    console.log('Video has been reset.');
 });
 
 openChatButton.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
+    if (chatCoverVideo.paused) {
+        chatCoverVideo.play()
+            .then(() => {
+                console.log('Video is now playing with sound!');
+            })
+            .catch(error => {
+                console.error('Error attempting to play video:', error);
+            });
+    }
 });
 
 openChatButtonText.addEventListener("click", () => {
@@ -176,6 +193,8 @@ openChatButtonText.addEventListener("click", () => {
 });
 
 closeChatButton.addEventListener("click", () => {
+    chatCoverVideo.pause();
+    chatCoverVideo.currentTime = 0;
     checkUserOut();
 });
 
