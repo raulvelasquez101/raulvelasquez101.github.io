@@ -68,7 +68,7 @@ function checkUserOut() {
         }
     }
     chatPopup.classList.toggle("show");
-    xcallyWebSocket != null ? xcallyWebSocket.emit("disconnect") : null ;
+    xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null ;
 }
 
 function moveSubmitUp() {

@@ -6,7 +6,9 @@
     <title>Xcally Chat!</title>
     <link rel="stylesheet" href="chat_window_style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+        integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -19,8 +21,7 @@
                 <p class="start-button-text">Chatea con nosotros</p>
             </div>
             <div class="start-button-image-container">
-                <img src="https://i.imgur.com/yuwie2Z.jpeg"
-                    class="start-button-image" />
+                <img src="https://i.imgur.com/yuwie2Z.jpeg" class="start-button-image" />
             </div>
         </div>
         <div class="chat-popup">
@@ -37,7 +38,13 @@
             <div class="super-chat-area">
                 <div class="chat-cover">
                     <div class="chat-cover-form">
-                        <span class="chat-cover-text">Bienvenidos a nuestro chat</span>
+                        <div class="chat-cover-video-container">
+                            <video class="chat-cover-video" autoplay playsinline>
+                                <source src="hello_video.mp4" type="video/mp4">
+                                Tu navegador web no permite videos, para obtener una experiencia óptima, utiliza esta
+                                ventana de chat a través de un navegador web actualizado
+                            </video>
+                        </div>
                         <div class="chat-cover-input-container">
                             <div class="dropdown" id="chat-cover-input-dropdown">
                                 <div class="dropdown-toggle" id="chat-cover-input-dropdown-toggle">
@@ -52,7 +59,7 @@
                                     <div class="dropdown-item">C</div>
                                 </div>
                             </div>
-                            <input class="text" id="chat-cover-input-text">
+                            <input class="text" id="chat-cover-input-text" placeholder="Introduce tu CI/RIF">
                             </input>
                         </div>
                         <div class="chat-cover-button">
@@ -74,5 +81,8 @@
     </section>
 </body>
 
-    <df-messenger chat-icon="https://plazacdn.s3.amazonaws.com/wp-content/themes/bancoplaza/imagenes/11.png" intent="WELCOME" chat-title="Clara" agent-id="17cbfd0e-bcb3-409d-99a8-d3afcbfa5c1b" language-code="es" expanded="true"></df-messenger>
+<df-messenger chat-icon="https://plazacdn.s3.amazonaws.com/wp-content/themes/bancoplaza/imagenes/11.png"
+    intent="WELCOME" chat-title="Clara" agent-id="17cbfd0e-bcb3-409d-99a8-d3afcbfa5c1b" language-code="es"
+    expanded="true"></df-messenger>
+
 </html>
