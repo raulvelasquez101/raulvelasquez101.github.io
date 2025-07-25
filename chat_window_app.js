@@ -21,7 +21,7 @@ let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
 
 function serverConnect() {
-    function appendMessage(text) {
+    /*function appendMessage(text) {
         const serverMessage = `<div class="server-message-container">
         <span class="server-message">${text}</span>
         </div>`;
@@ -33,10 +33,11 @@ function serverConnect() {
     });
     xcallyWebSocket.on("serverMessage", (text) => {
         appendMessage(text);
-    })
+    })*/
 }
 
 function sendMsg(textMessage) {
+    let ACK = null;
     if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
         if (textMessage.trim() != "") {
             const contactManagerIDField = "cf_4"
@@ -67,40 +68,40 @@ function checkUserOut() {
         }
     }
     chatPopup.classList.toggle("show");
-    xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null ;
+    xcallyWebSocket != null ? xcallyWebSocket.emit("disconnect") : null ;
 }
 
-function moveSubmitRight() {
+function moveSubmitUp() {
     const elem = document.getElementById("cht-wndw-sbmt");
-    if (elem.style.left != "6px") {
+    if (elem.style.bottom != "0px") {
         let id = null;
-        let pos = -24;
+        let pos = -30;
         clearInterval(id);
         id = setInterval(frame, 5);
         function frame() {
-            if (pos == 6) {
+            if (pos == 0) {
                 clearInterval(id);
             } else {
                 pos++;
-                elem.style.left = pos + "px";
+                elem.style.bottom = pos + "px";
             }
         }
     }
 }
 
-function moveSubmitLeft() {
+function moveSubmitDown(){
     if (textInput.value?.trim() === "") {
         let id = null;
         const elem = document.getElementById("cht-wndw-sbmt");
-        let pos = 6;
+        let pos = 0;
         clearInterval(id);
         id = setInterval(frame, 5);
         function frame() {
-            if (pos == -24) {
+            if (pos == -30) {
                 clearInterval(id);
             } else {
                 pos--;
-                elem.style.left = pos + "px";
+                elem.style.bottom = pos + "px";
             }
         }
     }
@@ -121,12 +122,11 @@ window.addEventListener('click', function (event) {
     }
 });
 
-chatCoverTextInput.addEventListener('keydown', (keydown) => {
-    console.log(key);
-    if (keydown.key === "Enter"){
+chatCoverTextInput.addEventListener('keydown', (key) => {
+    if (key === "Enter"){
         let userInput = textInput.value;
         sendMsg(userInput);
-        moveSubmitRight();
+        moveSubmitDown();
         chatCoverTextInput.value = "";
     }
 })
@@ -188,6 +188,6 @@ textInput.addEventListener("keydown", (trigger) => {
     if (trigger.key === "Enter") {
         let userInput = textInput.value;
         sendMsg(userInput);
-        moveSubmitRight();
+        moveSubmitDown();
     }
 });
