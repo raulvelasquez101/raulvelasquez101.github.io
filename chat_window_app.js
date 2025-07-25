@@ -21,7 +21,7 @@ let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
 
 function serverConnect() {
-    /*function appendMessage(text) {
+    function appendMessage(text) {
         const serverMessage = `<div class="server-message-container">
         <span class="server-message">${text}</span>
         </div>`;
@@ -33,7 +33,7 @@ function serverConnect() {
     });
     xcallyWebSocket.on("serverMessage", (text) => {
         appendMessage(text);
-    })*/
+    })
 }
 
 function sendMsg(textMessage) {
