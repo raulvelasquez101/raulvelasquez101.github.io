@@ -293,6 +293,7 @@
   .chat-window .chat-popup,
   .chat-window .chat-area {
     bottom: 0vh;
+    width: 80vw;
     left: 10%;
   }
 
