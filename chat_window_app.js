@@ -121,8 +121,9 @@ window.addEventListener('click', function (event) {
     }
 });
 
-chatCoverTextInput.addEventListener('keydown', (key) => {
-    if (key === "Enter"){
+chatCoverTextInput.addEventListener('keydown', (keydown) => {
+    console.log(key);
+    if (keydown.key === "Enter"){
         let userInput = textInput.value;
         sendMsg(userInput);
         moveSubmitRight();
