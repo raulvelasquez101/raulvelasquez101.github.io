@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>Xcally Chat!</title>
@@ -26,7 +27,7 @@
         </div>
         <div class="chat-popup">
             <div class="chat-popup-toolbar">
-                <button class="close-button">
+                <button class="close-button" id="chat-popup-button-close">
                     <i class="material-icons close-button-icon"> close </i>
                 </button>
                 <button class="minimize-button">
@@ -37,6 +38,13 @@
             </div>
             <div class="super-chat-area">
                 <div class="chat-cover">
+                    <div id="chat-cover-message">
+                        <button class="close-button" id="chat-cover-message-button-close">
+                            <i class="material-icons close-button-icon"> close </i>
+                        </button>
+                        <span>Estimado cliente, actualmente nuestros servicio de atención no en línea, por favor,
+                            intente más tarde</span>
+                    </div>
                     <div class="chat-cover-form">
                         <div class="chat-cover-video-container">
                             <video id="chat-cover-video" playsinline>
@@ -52,6 +60,7 @@
                                     <span>&#9662;</span>
                                 </div>
                                 <div class="dropdown-menu" id="chat-cover-input-dropdown-menu">
+                                    <div class="dropdown-item">V</div>
                                     <div class="dropdown-item">E</div>
                                     <div class="dropdown-item">P</div>
                                     <div class="dropdown-item">J</div>
