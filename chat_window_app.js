@@ -132,8 +132,7 @@ window.addEventListener('click', function (event) {
 
 chatCoverTextInput.addEventListener('keydown', (trigger) => {
     if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter") {
-        try{
-            serverConnect().then(() => {
+        serverConnect().then(() => {
             const contactManagerIDField = "cf_4"
             userID = chatCoverListValue.textContent + chatCoverTextInput.value;
             xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
@@ -147,17 +146,16 @@ chatCoverTextInput.addEventListener('keydown', (trigger) => {
                 } else {
                     userID = null;
                     chatCoverMessage.classList.add('show');
-
                 }
             }).catch((error) => {
                 console.log(error);
                 chatCoverMessage.classList.add('show');
             })
-        })
-        } catch(error){
+
+        }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');
-        }
+        });
     }
 })
 
@@ -179,8 +177,7 @@ chatCoverTextInput.addEventListener("input", () => {
 
 startChatButton.addEventListener("click", () => {
     if (chatCoverTextInput.value.trim() != "") {
-        try{
-            serverConnect().then(() => {
+        serverConnect().then(() => {
             const contactManagerIDField = "cf_4"
             userID = chatCoverListValue.textContent + chatCoverTextInput.value;
             xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
@@ -194,17 +191,16 @@ startChatButton.addEventListener("click", () => {
                 } else {
                     userID = null;
                     chatCoverMessage.classList.add('show');
-
                 }
             }).catch((error) => {
                 console.log(error);
                 chatCoverMessage.classList.add('show');
             })
-        })
-        } catch(error){
+
+        }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');
-        }
+        });
     }
 })
 
