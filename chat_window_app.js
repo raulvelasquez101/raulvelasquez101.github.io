@@ -16,8 +16,7 @@ let chatPopup = document.querySelector(".chat-popup"),
     chatCoverListValue = document.getElementById("chat-cover-input-dropdown-selected-value"),
     chatCoverTextInput = document.getElementById("chat-cover-input-text"),
     chatCoverVideo = document.getElementById("chat-cover-video"),
-    chatCoverMessage = document.getElementById("chat-cover-message"),
-    chatCoverMessageClose = document.getElementById("chat-cover-message-button-close");
+    chatCoverMessage = document.getElementById("chat-cover-message");
 
 let xcallyWebSocket = null;
 
@@ -76,6 +75,7 @@ function checkUserOut() {
         }
     }
     chatPopup.classList.toggle("show");
+    chatCoverMessage.classList.remove('show');
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
 }
 
@@ -130,34 +130,28 @@ window.addEventListener('click', function (event) {
     }
 });
 
-chatCoverMessageClose.addEventListener("click", () => {
-    chatCoverMessage.classList.remove('show');
-})
-
 chatCoverTextInput.addEventListener('keydown', (trigger) => {
     if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter") {
-        serverConnect().then((result) => {
-            if (result === true) {
-                const contactManagerIDField = "cf_4"
-                userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-                xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
-                    if (ACK === "Communication success") {
-                        chatCoverTextInput.value = "";
-                        chatCover.classList.toggle("hide");
-                        textInput.disabled = false;
-                        chatArea.innerHTML = "";
-                        chatCoverVideo.pause();
-                        chatCoverVideo.currentTime = 0;
-                    } else {
-                        userID = null;
-                        chatCoverMessage.classList.add('show');
-
-                    }
-                })
-
-            } else {
+        serverConnect().then(() => {
+            const contactManagerIDField = "cf_4"
+            userID = chatCoverListValue.textContent + chatCoverTextInput.value;
+            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+                if (ACK === "Communication success") {
+                    chatCoverTextInput.value = "";
+                    chatCover.classList.toggle("hide");
+                    textInput.disabled = false;
+                    chatArea.innerHTML = "";
+                    chatCoverVideo.pause();
+                    chatCoverVideo.currentTime = 0;
+                } else {
+                    userID = null;
+                    chatCoverMessage.classList.add('show');
+                }
+            }).catch((error) => {
+                console.log(error);
                 chatCoverMessage.classList.add('show');
-            }
+            })
+
         }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');
@@ -183,28 +177,26 @@ chatCoverTextInput.addEventListener("input", () => {
 
 startChatButton.addEventListener("click", () => {
     if (chatCoverTextInput.value.trim() != "") {
-        serverConnect().then((result) => {
-            if (result === true) {
-                const contactManagerIDField = "cf_4"
-                userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-                xcallyWebSocket.emit("clientMessage", textMessage, userID, contactManagerIDField, (ACK) => {
-                    if (ACK === "Communication success") {
-                        chatCoverTextInput.value = "";
-                        chatCover.classList.toggle("hide");
-                        textInput.disabled = false;
-                        chatArea.innerHTML = "";
-                        chatCoverVideo.pause();
-                        chatCoverVideo.currentTime = 0;
-                    } else {
-                        userID = null;
-                        chatCoverMessage.classList.add('show');
+        serverConnect().then(() => {
+            const contactManagerIDField = "cf_4"
+            userID = chatCoverListValue.textContent + chatCoverTextInput.value;
+            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+                if (ACK === "Communication success") {
+                    chatCoverTextInput.value = "";
+                    chatCover.classList.toggle("hide");
+                    textInput.disabled = false;
+                    chatArea.innerHTML = "";
+                    chatCoverVideo.pause();
+                    chatCoverVideo.currentTime = 0;
+                } else {
+                    userID = null;
+                    chatCoverMessage.classList.add('show');
 
-                    }
-                })
-
-            } else {
+                }
+            }).catch((error) => {
+                console.log(error);
                 chatCoverMessage.classList.add('show');
-            }
+            })
         }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');

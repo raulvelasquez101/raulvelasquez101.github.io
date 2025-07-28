@@ -523,16 +523,12 @@
 #chat-cover-message{
   visibility: hidden;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  padding: 30px;
-  border: 1px solid black;
   display: flex;
+  align-items: center;
+  height: 100%;
+  background-color: #fafafa;
 }
 
-#chat-cover-message-button-close{
-  position: absolute;
-  right: 10px;
-  top: 10px;
+#chat-cover-message .show{
+  visibility: visible;
 }
