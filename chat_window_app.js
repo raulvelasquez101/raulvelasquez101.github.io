@@ -135,7 +135,8 @@ chatCoverTextInput.addEventListener('keydown', (trigger) => {
         serverConnect().then(() => {
             const contactManagerIDField = "cf_4"
             userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+            try {
+              xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
                 if (ACK === "Communication success") {
                     chatCoverTextInput.value = "";
                     chatCover.classList.toggle("hide");
@@ -147,11 +148,11 @@ chatCoverTextInput.addEventListener('keydown', (trigger) => {
                     userID = null;
                     chatCoverMessage.classList.add('show');
                 }
-            }).catch((error) => {
+            })  
+            } catch (error){
                 console.log(error);
                 chatCoverMessage.classList.add('show');
-            })
-
+            }
         }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');
@@ -180,7 +181,8 @@ startChatButton.addEventListener("click", () => {
         serverConnect().then(() => {
             const contactManagerIDField = "cf_4"
             userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+            try {
+               xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
                 if (ACK === "Communication success") {
                     chatCoverTextInput.value = "";
                     chatCover.classList.toggle("hide");
@@ -192,11 +194,11 @@ startChatButton.addEventListener("click", () => {
                     userID = null;
                     chatCoverMessage.classList.add('show');
                 }
-            }).catch((error) => {
-                console.log(error);
+            }) 
+            } catch (error){
+                console.error(error);
                 chatCoverMessage.classList.add('show');
-            })
-
+            }
         }).catch((error) => {
             console.log(error);
             chatCoverMessage.classList.add('show');
