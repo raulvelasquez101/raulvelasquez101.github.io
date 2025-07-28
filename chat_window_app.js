@@ -139,7 +139,7 @@ chatCoverTextInput.addEventListener('keydown', (trigger) => {
         serverConnect().then((result) => {
             if (result === true) {
                 userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-                xcallyWebSocket.emit("clientMessage", textMessage, userID, contactManagerIDField, (ACK) => {
+                xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
                     if (ACK === "Communication success") {
                         chatCoverTextInput.value = "";
                         chatCover.classList.toggle("hide");
