@@ -138,6 +138,7 @@ chatCoverTextInput.addEventListener('keydown', (trigger) => {
     if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter") {
         serverConnect().then((result) => {
             if (result === true) {
+                const contactManagerIDField = "cf_4"
                 userID = chatCoverListValue.textContent + chatCoverTextInput.value;
                 xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
                     if (ACK === "Communication success") {
@@ -184,6 +185,7 @@ startChatButton.addEventListener("click", () => {
     if (chatCoverTextInput.value.trim() != "") {
         serverConnect().then((result) => {
             if (result === true) {
+                const contactManagerIDField = "cf_4"
                 userID = chatCoverListValue.textContent + chatCoverTextInput.value;
                 xcallyWebSocket.emit("clientMessage", textMessage, userID, contactManagerIDField, (ACK) => {
                     if (ACK === "Communication success") {
