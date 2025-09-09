@@ -16,13 +16,15 @@ let chatPopup = document.querySelector(".chat-popup"),
     chatCoverListValue = document.getElementById("chat-cover-input-dropdown-selected-value"),
     chatCoverTextInput = document.getElementById("chat-cover-input-text"),
     chatCoverVideo = document.getElementById("chat-cover-video"),
-    chatCoverMessage = document.getElementById("chat-cover-message");
+    chatCoverMessageContainer = document.getElementById("chat-cover-message-container"),
+    chatCoverWaitMessage = document.getElementById("chat-cover-wait-message"),
+    chatCoverCloseMessage = document.getElementById("chat-cover-close-message");
 
 let xcallyWebSocket = null;
-
 let userID; // this is used to identify the user on the CC server;
+let chatIntervalID;
 
-async function serverConnect() {
+function serverConnect() {
     function appendMessage(text) {
         const serverMessage = `<div class="server-message-container">
         <span class="server-message">${text}</span>
@@ -30,8 +32,10 @@ async function serverConnect() {
         chatArea.insertAdjacentHTML("beforeend", serverMessage);
         updateScroll();
     };
-    xcallyWebSocket = await io("https://cx.oltpsys.com", {
-        path: "/webChat/chatSocket/"
+    xcallyWebSocket = io("https://cx.oltpsys.com", {
+        path: "/webChat/chatSocket/",
+        timeout: 2000,
+        reconnectionAttempts: 5
     });
     xcallyWebSocket.on("serverMessage", (text) => {
         appendMessage(text);
@@ -41,7 +45,25 @@ async function serverConnect() {
             appendMessage("¡Gracias por contactarnos! Hasta luego.")
         }
     })
+    xcallyWebSocket.on("reconnect_failed", () => {
+        if (chatPopup.classList.contains("show")) {
+            chatCoverWaitMessage.classList.add('hide');
+            chatCoverCloseMessage.classList.remove("hide");
+        }
+    })
+    xcallyWebSocket.on("shutdown", (text) => {
+        if (text != undefined) {
+            chatCoverCloseMessage.innerHTML = text;
+        }
+        clearInterval(chatIntervalID);
+        chatCoverMessageContainer.classList.remove('hide');
+        chatCover.classList.remove("hide");
+        chatCoverWaitMessage.classList.add("hide");
+        chatCoverCloseMessage.classList.remove('hide');
+        xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
+    })
 }
+
 
 function sendMsg(textMessage) {
     let ACK = null;
@@ -75,7 +97,9 @@ function checkUserOut() {
         }
     }
     chatPopup.classList.toggle("show");
-    chatCoverMessage.classList.remove('show');
+    chatCoverMessageContainer.classList.add('hide');
+    chatCoverCloseMessage.classList.add('hide');
+    chatCoverWaitMessage.classList.add('hide');
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
 }
 
@@ -115,6 +139,37 @@ function moveSubmitDown() {
     }
 }
 
+function chatStarter() {
+    chatCoverMessageContainer.classList.remove('hide');
+    chatCoverWaitMessage.classList.remove('hide');
+    serverConnect()
+    const contactManagerIDField = "cf_4"
+    userID = chatCoverListValue.textContent + chatCoverTextInput.value;
+    try {
+        xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+            if (ACK === "Communication success") {
+                chatIntervalID = setInterval(() => {
+                    chatCoverMessageContainer.classList.add('hide');
+                    chatCoverTextInput.value = "";
+                    chatCover.classList.toggle("hide");
+                }, 2000)
+                textInput.disabled = false;
+                chatArea.innerHTML = "";
+                chatCoverVideo.pause();
+                chatCoverVideo.currentTime = 0;
+            } else {
+                chatCoverWaitMessage.classList.add('hide');
+                chatCoverCloseMessage.classList.remove('hide');
+                userID = null;
+            }
+        })
+    } catch (error) {
+        console.log(error);
+        chatCoverWaitMessage.classList.add('hide');
+        chatCoverCloseMessage.classList.remove('hide');
+    }
+}
+
 chatCoverListDropdownMenu.addEventListener('click', function (event) {
     if (event.target.classList.contains('dropdown-item')) {
         chatCoverListValue.textContent = event.target.textContent;
@@ -132,30 +187,7 @@ window.addEventListener('click', function (event) {
 
 chatCoverTextInput.addEventListener('keydown', (trigger) => {
     if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter") {
-        serverConnect().then(() => {
-            const contactManagerIDField = "cf_4"
-            userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
-                if (ACK === "Communication success") {
-                    chatCoverTextInput.value = "";
-                    chatCover.classList.toggle("hide");
-                    textInput.disabled = false;
-                    chatArea.innerHTML = "";
-                    chatCoverVideo.pause();
-                    chatCoverVideo.currentTime = 0;
-                } else {
-                    userID = null;
-                    chatCoverMessage.classList.add('show');
-                }
-            }).catch((error) => {
-                console.log(error);
-                chatCoverMessage.classList.add('show');
-            })
-
-        }).catch((error) => {
-            console.log(error);
-            chatCoverMessage.classList.add('show');
-        })
+        chatStarter();
     }
 })
 
@@ -177,30 +209,7 @@ chatCoverTextInput.addEventListener("input", () => {
 
 startChatButton.addEventListener("click", () => {
     if (chatCoverTextInput.value.trim() != "") {
-        serverConnect().then(() => {
-            const contactManagerIDField = "cf_4"
-            userID = chatCoverListValue.textContent + chatCoverTextInput.value;
-            xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
-                if (ACK === "Communication success") {
-                    chatCoverTextInput.value = "";
-                    chatCover.classList.toggle("hide");
-                    textInput.disabled = false;
-                    chatArea.innerHTML = "";
-                    chatCoverVideo.pause();
-                    chatCoverVideo.currentTime = 0;
-                } else {
-                    userID = null;
-                    chatCoverMessage.classList.add('show');
-
-                }
-            }).catch((error) => {
-                console.log(error);
-                chatCoverMessage.classList.add('show');
-            })
-        }).catch((error) => {
-            console.log(error);
-            chatCoverMessage.classList.add('show');
-        })
+        chatStarter();
     }
 })
 

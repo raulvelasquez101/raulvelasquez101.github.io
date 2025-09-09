@@ -67,8 +67,9 @@
 }
 
 .chat-window .start-button-image {
-  margin: 1rem;
-  height: 140%;
+  height: 180%;
+  padding-top: 1.5rem;
+  padding-left: 0.4rem;
 }
 
 
@@ -520,15 +521,16 @@
   padding: 2px;
 }
 
-#chat-cover-message{
-  visibility: hidden;
+#chat-cover-message-container{
   position: absolute;
   display: flex;
   align-items: center;
   height: 100%;
   background-color: #fafafa;
+  z-index: 1;
 }
 
-#chat-cover-message .show{
-  visibility: visible;
+#chat-cover-wait-message{
+  position: absolute;
+  margin: 5px;
 }

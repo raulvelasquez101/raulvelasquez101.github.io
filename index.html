@@ -38,8 +38,9 @@
             </div>
             <div class="super-chat-area">
                 <div class="chat-cover">
-                    <div id="chat-cover-message">
-                        <span>Estimado cliente, actualmente nuestros servicios de atención no en línea, por favor,
+                    <div id="chat-cover-message-container" class="hide">
+                        <span id="chat-cover-wait-message" class="hide"> Estimado cliente, pronto lo atenderemos, gracias por su paciencia.</span>
+                        <span id="chat-cover-close-message" class="hide">Estimado cliente, actualmente nuestros servicios de atención no están en línea, por favor,
                             intente más tarde</span>
                     </div>
                     <div class="chat-cover-form">
@@ -86,9 +87,5 @@
         <script src="chat_window_app.js"></script>
     </section>
 </body>
-
-<df-messenger chat-icon="https://plazacdn.s3.amazonaws.com/wp-content/themes/bancoplaza/imagenes/11.png"
-    intent="WELCOME" chat-title="Clara" agent-id="17cbfd0e-bcb3-409d-99a8-d3afcbfa5c1b" language-code="es"
-    expanded="true"></df-messenger>
 
 </html>
