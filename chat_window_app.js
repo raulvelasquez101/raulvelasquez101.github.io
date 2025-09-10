@@ -152,6 +152,7 @@ function chatStarter() {
                     chatCoverMessageContainer.classList.add('hide');
                     chatCoverTextInput.value = "";
                     chatCover.classList.toggle("hide");
+                    clearInterval(chatIntervalID);
                 }, 2000)
                 textInput.disabled = false;
                 chatArea.innerHTML = "";
