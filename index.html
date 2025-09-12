@@ -6,6 +6,8 @@
     <title>Xcally Chat!</title>
     <link rel="stylesheet" href="chat_window_style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=exclamation" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
         integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
@@ -39,8 +41,13 @@
             <div class="super-chat-area">
                 <div class="chat-cover">
                     <div id="chat-cover-message-container" class="hide">
-                        <span id="chat-cover-wait-message" class="hide"> Estimado cliente, pronto lo atenderemos, gracias por su paciencia.</span>
-                        <span id="chat-cover-close-message" class="hide">Estimado cliente, actualmente nuestros servicios de atención no están en línea, por favor,
+                        <span id="chat-cover-wait-message" class="hide"> Estimado cliente, pronto lo atenderemos,
+                            gracias por su paciencia.</span>
+                        <span id="chat-cover-close-message" class="hide">
+                            <span class="material-symbols-outlined hide">
+                                exclamation
+                            </span>Estimado cliente, actualmente nuestros
+                            servicios de atención no están en línea, por favor,
                             intente más tarde</span>
                     </div>
                     <div class="chat-cover-form">

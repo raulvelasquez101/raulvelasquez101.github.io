@@ -22,7 +22,7 @@ let chatPopup = document.querySelector(".chat-popup"),
 
 let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
-let chatIntervalID;
+let chatIntervalID = { closeInterval: null, openInterval: null };
 
 function serverConnect() {
     function appendMessage(text) {
@@ -47,19 +47,16 @@ function serverConnect() {
     })
     xcallyWebSocket.on("reconnect_failed", () => {
         if (chatPopup.classList.contains("show")) {
-            chatCoverWaitMessage.classList.add('hide');
-            chatCoverCloseMessage.classList.remove("hide");
+            chatCoverContentHandler("show close message");
         }
     })
     xcallyWebSocket.on("shutdown", (text) => {
         if (text != undefined) {
             chatCoverCloseMessage.innerHTML = text;
         }
-        clearInterval(chatIntervalID);
-        chatCoverMessageContainer.classList.remove('hide');
-        chatCover.classList.remove("hide");
-        chatCoverWaitMessage.classList.add("hide");
-        chatCoverCloseMessage.classList.remove('hide');
+        clearInterval(chatIntervalID.openInterval);
+        clearInterval(chatIntervalID.closeInterval);
+        chatCoverContentHandler("show close message");
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
 }
@@ -91,15 +88,9 @@ function updateScroll() {
 }
 
 function checkUserOut() {
-    for (const classes of chatCover.classList) {
-        if (classes === "hide") {
-            chatCover.classList.toggle("hide");
-        }
-    }
+    chatCover.classList.remove("hide");
     chatPopup.classList.toggle("show");
-    chatCoverMessageContainer.classList.add('hide');
-    chatCoverCloseMessage.classList.add('hide');
-    chatCoverWaitMessage.classList.add('hide');
+    chatCoverContentHandler("hide wait and close messages")
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
 }
 
@@ -139,35 +130,82 @@ function moveSubmitDown() {
     }
 }
 
+function chatCoverContentHandler(action) {
+    switch (action) {
+        case "show wait message":
+            chatCover.classList.remove("hide");
+            chatCoverMessageContainer.classList.remove('hide');
+            chatCoverCloseMessage.classList.add('hide');
+            chatCoverWaitMessage.classList.remove('hide');
+            break;
+        case "show close message":
+            chatCover.classList.remove("hide");
+            chatCoverMessageContainer.classList.remove('hide');
+            chatCoverCloseMessage.classList.remove('hide');
+            chatCoverWaitMessage.classList.add('hide');
+            break;
+        case "hide wait and close messages":
+            chatCoverMessageContainer.classList.add('hide');
+            chatCoverCloseMessage.classList.add('hide');
+            chatCoverWaitMessage.classList.add('hide');
+            break;
+        case "show form and play video":
+            chatCover.classList.remove("hide");
+            chatCoverVideo.currentTime = 0;
+            chatCoverMessageContainer.classList.add('hide');
+            chatCoverCloseMessage.classList.add('hide');
+            chatCoverWaitMessage.classList.add('hide');
+            try {
+            chatCoverVideo.play();                
+            } catch (error) {
+            console.error(error)
+            }
+            break;
+        case "pause and reset video":
+            try {
+            chatCoverVideo.pause(); 
+            chatCoverVideo.currentTime = 0;
+            } catch (error) {
+            console.error(error);
+            }
+            break;  
+        default:
+            console.log("Empty chat cover content handler call");
+            break;
+    }
+}
+
 function chatStarter() {
-    chatCoverMessageContainer.classList.remove('hide');
-    chatCoverWaitMessage.classList.remove('hide');
-    serverConnect()
-    const contactManagerIDField = "cf_4"
+    chatCoverContentHandler("pause and reset video");
+    chatCoverContentHandler("show wait message");
+    serverConnect();
+    const contactManagerIDField = "cf_4";
     userID = chatCoverListValue.textContent + chatCoverTextInput.value;
+    chatIntervalID.closeInterval = setInterval(() => {
+        chatCoverContentHandler("show close message");
+        clearInterval(chatIntervalID.closeInterval);
+        clearInterval(chatIntervalID.openInterval);
+    }, 15000);
     try {
         xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
             if (ACK === "Communication success") {
-                chatIntervalID = setInterval(() => {
-                    chatCoverMessageContainer.classList.add('hide');
+                chatIntervalID.openInterval = setInterval(() => {
+                    chatCoverContentHandler("hide wait and close message");
                     chatCoverTextInput.value = "";
                     chatCover.classList.toggle("hide");
-                    clearInterval(chatIntervalID);
+                    clearInterval(chatIntervalID.openInterval);
+                    clearInterval(chatIntervalID.closeInterval);
                 }, 2000)
                 textInput.disabled = false;
                 chatArea.innerHTML = "";
-                chatCoverVideo.pause();
-                chatCoverVideo.currentTime = 0;
             } else {
-                chatCoverWaitMessage.classList.add('hide');
-                chatCoverCloseMessage.classList.remove('hide');
+                chatCoverContentHandler("show close message");
                 userID = null;
             }
         })
     } catch (error) {
         console.log(error);
-        chatCoverWaitMessage.classList.add('hide');
-        chatCoverCloseMessage.classList.remove('hide');
+        chatCoverContentHandler("show close message");
     }
 }
 
@@ -221,30 +259,21 @@ chatCoverListToggle.addEventListener('click', function (event) {
 
 minimizeChatButton.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
-    chatCoverVideo.pause();
-    chatCoverVideo.currentTime = 0;
+    chatCoverContentHandler("pause and reset video")
 });
 
 openChatButton.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
-    if (chatCoverVideo.paused) {
-        chatCoverVideo.play()
-            .then(() => {
-                console.log('Video is now playing with sound!');
-            })
-            .catch(error => {
-                console.error('Error attempting to play video:', error);
-            });
-    }
+    !chatCover.classList.contains('hide') && chatCoverWaitMessage.classList.contains('hide') ? chatCoverContentHandler("show form and play video") : null;
 });
 
 openChatButtonText.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
+    !chatCover.classList.contains('hide') && chatCoverWaitMessage.classList.contains('hide') ? chatCoverContentHandler("show form and play video") : null;
 });
 
 closeChatButton.addEventListener("click", () => {
-    chatCoverVideo.pause();
-    chatCoverVideo.currentTime = 0;
+    chatCoverContentHandler("pause and reset video")
     checkUserOut();
 });
 

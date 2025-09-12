@@ -55,7 +55,7 @@
   border-radius: 50%;
   opacity: 0.8;
   transition: opacity 0.3s;
-  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
   margin-left: -5px;
   display: flex;
   align-items: center;
@@ -533,4 +533,14 @@
 #chat-cover-wait-message{
   position: absolute;
   margin: 5px;
+}
+
+#chat-cover-close-message{
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 48px;
+}
+
+#chat-cover-close-message span{
+  font-size: 48px;
 }
