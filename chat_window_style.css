@@ -43,11 +43,9 @@
   padding-bottom: 5px;
   border-radius: 8px;
   background-color: white;
-}
-
-.chat-window .start-button.text:hover {
   cursor: pointer;
 }
+
 
 .chat-window .start-button-image-container {
   background-color: white;
