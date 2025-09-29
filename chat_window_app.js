@@ -23,6 +23,7 @@ let chatPopup = document.querySelector(".chat-popup"),
 let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
 let chatIntervalID = { closeInterval: null, openInterval: null };
+let ongoingChat = false;
 
 function serverConnect() {
     function appendMessage(text) {
@@ -37,8 +38,9 @@ function serverConnect() {
         timeout: 2000,
         reconnectionAttempts: 5
     });
-    xcallyWebSocket.on("serverMessage", (text) => {
+    xcallyWebSocket.on("serverMessage", (text, callback) => {
         appendMessage(text);
+        callback();
     })
     xcallyWebSocket.on("disconnect", (reason) => {
         if (reason === "io server disconnect" || reason === "io client disconnect") {
@@ -63,11 +65,9 @@ function serverConnect() {
 
 
 function sendMsg(textMessage) {
-    let ACK = null;
     if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
         if (textMessage.trim() != "") {
-            const contactManagerIDField = "cf_4"
-            xcallyWebSocket.emit("clientMessage", textMessage, userID, contactManagerIDField, (ACK) => {
+            xcallyWebSocket.emit("clientMessage", textMessage, userID, (ACK) => {
                 if (ACK === "Communication success") {
                     let usermsg = `<div class="user-message-container">
     <span class="user-message">${textMessage}</span>
@@ -75,6 +75,8 @@ function sendMsg(textMessage) {
                     textInput.value = "";
                     chatArea.insertAdjacentHTML("beforeend", usermsg);
                     updateScroll();
+                } else {
+                    console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
                 }
             })
         }
@@ -91,6 +93,7 @@ function checkUserOut() {
     chatCover.classList.remove("hide");
     chatPopup.classList.toggle("show");
     chatCoverContentHandler("hide wait and close messages")
+    ongoingChat = false;
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
 }
 
@@ -145,6 +148,7 @@ function chatCoverContentHandler(action) {
             chatCoverWaitMessage.classList.add('hide');
             break;
         case "hide wait and close messages":
+            chatCover.classList.add("hide");
             chatCoverMessageContainer.classList.add('hide');
             chatCoverCloseMessage.classList.add('hide');
             chatCoverWaitMessage.classList.add('hide');
@@ -187,12 +191,12 @@ function chatStarter() {
         clearInterval(chatIntervalID.openInterval);
     }, 15000);
     try {
-        xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, contactManagerIDField, (ACK) => {
+        xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, (ACK) => {
             if (ACK === "Communication success") {
+                ongoingChat = true;
                 chatIntervalID.openInterval = setInterval(() => {
-                    chatCoverContentHandler("hide wait and close message");
+                    chatCoverContentHandler("hide wait and close messages");
                     chatCoverTextInput.value = "";
-                    chatCover.classList.toggle("hide");
                     clearInterval(chatIntervalID.openInterval);
                     clearInterval(chatIntervalID.closeInterval);
                 }, 2000)
@@ -264,12 +268,12 @@ minimizeChatButton.addEventListener("click", () => {
 
 openChatButton.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
-    !chatCover.classList.contains('hide') && chatCoverWaitMessage.classList.contains('hide') ? chatCoverContentHandler("show form and play video") : null;
+    ongoingChat === false ? chatCoverContentHandler("show form and play video") : null;
 });
 
 openChatButtonText.addEventListener("click", () => {
     chatPopup.classList.toggle("show");
-    !chatCover.classList.contains('hide') && chatCoverWaitMessage.classList.contains('hide') ? chatCoverContentHandler("show form and play video") : null;
+    ongoingChat === false ? chatCoverContentHandler("show form and play video") : null;
 });
 
 closeChatButton.addEventListener("click", () => {
