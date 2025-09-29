@@ -90,6 +90,8 @@ function updateScroll() {
 }
 
 function checkUserOut() {
+    clearInterval(chatIntervalID.closeInterval);
+    clearInterval(chatIntervalID.openInterval);
     chatCover.classList.remove("hide");
     chatPopup.classList.toggle("show");
     chatCoverContentHandler("hide wait and close messages")
