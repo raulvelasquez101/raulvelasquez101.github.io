@@ -144,6 +144,7 @@ function chatCoverContentHandler(action) {
             chatCoverWaitMessage.classList.remove('hide');
             break;
         case "show close message":
+            console.log("called show close message")
             chatCover.classList.remove("hide");
             chatCoverMessageContainer.classList.remove('hide');
             chatCoverCloseMessage.classList.remove('hide');
@@ -185,7 +186,6 @@ function chatStarter() {
     chatCoverContentHandler("pause and reset video");
     chatCoverContentHandler("show wait message");
     serverConnect();
-    const contactManagerIDField = "cf_4";
     userID = chatCoverListValue.textContent + chatCoverTextInput.value;
     chatIntervalID.closeInterval = setInterval(() => {
         chatCoverContentHandler("show close message");
