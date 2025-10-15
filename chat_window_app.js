@@ -62,8 +62,8 @@ function serverConnect() {
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
     xcallyWebSocket.on("clean shutdown", () => {
-        setTimeout(() => {
-            checkUserOut();
+        const tempTimeout = setTimeout(() => {
+            checkUserOut(tempTimeout);
         }, 3000)
     })
 }
@@ -94,7 +94,9 @@ function updateScroll() {
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
-function checkUserOut() {
+function checkUserOut(tempTimeoutOrInterval) {
+    clearTimeout(tempTimeoutOrInterval);
+    clearInterval(tempTimeoutOrInterval);
     clearInterval(chatIntervalID.closeInterval);
     clearInterval(chatIntervalID.openInterval);
     chatCover.classList.remove("hide");
