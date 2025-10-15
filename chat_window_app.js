@@ -61,6 +61,11 @@ function serverConnect() {
         chatCoverContentHandler("show close message");
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
+    xcallyWebSocket.on("clean shutdown", () => {
+        setTimeout(() => {
+            checkUserOut();
+        }, 3000)
+    })
 }
 
 
