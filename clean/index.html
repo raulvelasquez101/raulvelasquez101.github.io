@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Xcally Chat!</title>
+    <link rel="stylesheet" href="chat_window_style.css" />
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+        integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+        crossorigin="anonymous"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <section class="chat-window">
+        <div class="start-button-container">
+            <div class="start-button-text">
+                <p class="start-button-text">Chatea con nosotros</p>
+            </div>
+            <div class="start-button-image-container">
+                <img src="https://plazacdn-dev.s3.amazonaws.com/wp-content/themes/bancoplaza/imagenes/open_chat_image.jpg" class="start-button-image" />
+            </div>
+        </div>
+        <div class="chat-popup">
+            <div class="chat-popup-toolbar">
+                <button class="close-button" id="chat-popup-button-close">
+                    <svg class="close-button-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
+                        width="24px" fill="#1f1f1f">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+                <button class="minimize-button">
+                    <svg class="minimize-button-icon" xmlns="http://www.w3.org/2000/svg" height="24px"
+                        viewBox="0 0 24 24" width="24px" fill="#1f1f1f">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path d="M6 19h12v2H6v-2z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="super-chat-area">
+                <div class="chat-cover">
+                    <div id="chat-cover-message-container" class="hide">
+                        <span id="chat-cover-wait-message" class="hide"> Estimado cliente, pronto lo atenderemos,
+                            gracias por su paciencia.</span>
+                        <span id="chat-cover-close-message" class="hide">
+                            Estimado cliente, actualmente nuestros
+                            servicios de atención no están en línea, por favor,
+                            intente más tarde</span>
+                    </div>
+                    <div class="chat-cover-form">
+                        <div class="chat-cover-video-container">
+                            <video id="chat-cover-video" playsinline>
+                                <source src="https://plazacdn-dev.s3.amazonaws.com/wp-content/themes/bancoplaza/video/hello_video.mp4" type="video/mp4">
+                                Tu navegador web no permite videos, para obtener una experiencia óptima, utiliza esta
+                                ventana de chat a través de un navegador web actualizado
+                            </video>
+                        </div>
+                        <div class="chat-cover-input-container">
+                            <div class="dropdown" id="chat-cover-input-dropdown">
+                                <div class="dropdown-toggle" id="chat-cover-input-dropdown-toggle">
+                                    <span id="chat-cover-input-dropdown-selected-value">V</span>
+                                    <span>&#9662;</span>
+                                </div>
+                                <div class="dropdown-menu" id="chat-cover-input-dropdown-menu">
+                                    <div class="dropdown-item">V</div>
+                                    <div class="dropdown-item">E</div>
+                                    <div class="dropdown-item">P</div>
+                                    <div class="dropdown-item">J</div>
+                                    <div class="dropdown-item">G</div>
+                                    <div class="dropdown-item">C</div>
+                                </div>
+                            </div>
+                            <input class="text" id="chat-cover-input-text" placeholder="Introduce tu CI/RIF">
+                            </input>
+                        </div>
+                        <div class="chat-cover-button">
+                            Iniciar chat
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-area"></div>
+                <div class="input-area">
+                    <input type="text" class="input-area-text" placeholder="Escribe tu pregunta" id="cht-wndw-txt-ntr"/>
+                    <button class="input-area-submit" id="cht-wndw-sbmt">
+                        <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#1f1f1f"><path d="M144-192v-576l720 288-720 288Zm72-107 454-181-454-181v109l216 72-216 72v109Zm0 0v-362 362Z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script src="chat_window_app.js"></script>
+    </section>
+</body>
+
+</html>
