@@ -1,4 +1,3 @@
-// selecting html elements for manipulation in program below
 let chatPopup = document.querySelector(".chat-popup"),
     openChatButton = document.querySelector(".start-button-image"),
     submitButton = document.getElementById("cht-wndw-sbmt"),
@@ -33,7 +32,7 @@ function serverConnect() {
         chatArea.insertAdjacentHTML("beforeend", serverMessage);
         updateScroll();
     };
-    xcallyWebSocket = io("https://cx.oltpsys.com", {
+    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
@@ -303,3 +302,6 @@ textInput.addEventListener("keydown", (trigger) => {
         moveSubmitDown();
     }
 });
+
+textInput.addEventListener("focus", moveSubmitUp);
+textInput.addEventListener("blur", moveSubmitDown);
