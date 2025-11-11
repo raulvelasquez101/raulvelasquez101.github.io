@@ -49,7 +49,7 @@ function serverConnect() {
             makeDisabledTextInput(true);
         }
     }
-    xcallyWebSocket = io("https://cx.oltpsys.com", {
+    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
