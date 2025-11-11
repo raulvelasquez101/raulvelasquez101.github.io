@@ -359,7 +359,7 @@
   width: 100%;
 }
 
-.chat-window .contenedor-menu-YorN {
+.chat-window .contenedor-menu-AorB {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 8px;
@@ -381,12 +381,13 @@
   cursor: pointer;
 }
 
-.chat-window .contenedor-btn-si,
-.chat-window .contenedor-btn-no,
-.chat-window .contenedor-btn-agente {
+.chat-window .contenedor-boton{
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #e8e8e8;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .chat-window .btn-si,

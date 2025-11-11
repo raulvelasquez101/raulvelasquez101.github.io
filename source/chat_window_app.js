@@ -23,6 +23,7 @@ let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
 let chatIntervalID = { closeInterval: null, openInterval: null };
 let ongoingChat = false;
+let currentIdForChatButtons = 1;
 
 function serverConnect() {
     function appendMessage(text) {
@@ -32,7 +33,23 @@ function serverConnect() {
         chatArea.insertAdjacentHTML("beforeend", serverMessage);
         updateScroll();
     };
-    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
+    function create2Choice(button1Text, button2Text, disableTextInput) {
+        let tempAorB = `
+                <div class="contenedor-menu-AorB" id="chat-menu-${currentIdForChatButtons}">
+                    <div class="contenedor-boton button-parent">
+                        <span class="texto-botones button-root"> ${button1Text} </span> 
+                    </div>
+                      <div class="contenedor-boton button-parent">
+                        <span class="texto-botones button-root"> ${button2Text} </span>
+                      </div>
+                </div>`;
+        chatArea.insertAdjacentHTML("beforeend", tempAorB);
+        updateScroll();
+        if (disableTextInput) {
+            makeDisabledTextInput(true);
+        }
+    }
+    xcallyWebSocket = io("https://cx.oltpsys.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
@@ -65,8 +82,50 @@ function serverConnect() {
             checkUserOut(tempTimeout);
         }, 3000)
     })
+    xcallyWebSocket.on("messageAndTwoButtons", (message, button1Text, button2Text, disableTextInput) => {
+        appendMessage(message);
+        try {
+            create2Choice(button1Text, button2Text, disableTextInput);
+        } catch (error) {
+            console.log("Error when creating two choice menu.");
+            console.error(error.message);
+        }
+    })
+    xcallyWebSocket.on("getTypeOfPerson", () => {
+        const naturalsArray = ["V", "E"];
+        const corporatesArray = ["R", "J", "G", "C"];
+        const typeOfPerson = userID[0];
+        if (!corporatesArray.includes(typeOfPerson) && !naturalsArray.includes(typeOfPerson)){
+            console.log("There is some problem with the literal character in the user's ID");
+        }
+        if(naturalsArray.includes(typeOfPerson)){
+            xcallyWebSocket.emit("clientMessage", "Persona natural", userID, (ACK)=> {
+                if (ACK != "Communication success") {
+                    console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
+                }
+            });
+        }
+        if(corporatesArray.includes(typeOfPerson)){
+            xcallyWebSocket.emit("clientMessage", "Persona jurídica", userID, (ACK)=> {
+                if (ACK != "Communication success") {
+                    console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
+                }
+            });
+        }
+    })
 }
 
+function makeDisabledTextInput(disable) {
+    if (disable) {
+        textInput.disabled = true;
+        textInput.placeholder = ""
+        textInput.classList.add("make-opaque");
+    } else {
+        textInput.disabled = false;
+        textInput.placeholder = "Escribe tu pregunta"
+        textInput.classList.remove("make-opaque");
+    }
+}
 
 function sendMsg(textMessage) {
     if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
@@ -169,19 +228,19 @@ function chatCoverContentHandler(action) {
             chatCoverCloseMessage.classList.add('hide');
             chatCoverWaitMessage.classList.add('hide');
             try {
-            chatCoverVideo.play();                
+                chatCoverVideo.play();
             } catch (error) {
-            console.error(error)
+                console.error(error)
             }
             break;
         case "pause and reset video":
             try {
-            chatCoverVideo.pause(); 
-            chatCoverVideo.currentTime = 0;
+                chatCoverVideo.pause();
+                chatCoverVideo.currentTime = 0;
             } catch (error) {
-            console.error(error);
+                console.error(error);
             }
-            break;  
+            break;
         default:
             console.log("Empty chat cover content handler call");
             break;
@@ -300,6 +359,43 @@ textInput.addEventListener("keydown", (trigger) => {
         let userInput = textInput.value;
         sendMsg(userInput);
         moveSubmitDown();
+    }
+});
+
+chatArea.addEventListener("click", async function (trigger) {
+    let clickedElement = trigger.target;
+    const possibleClasses = ["texto-botones", "contenedor-boton"];
+    const clickedClassesArray = Array.from(clickedElement.classList);
+    const isChatButton = possibleClasses.some(validClass => clickedClassesArray.includes(validClass));
+    const buttonGroupContainer = clickedElement.closest('[id^="chat-menu-"]');
+    if (buttonGroupContainer) {
+        const containerIdNumber = parseInt(buttonGroupContainer.id.split('-').pop());
+        if (containerIdNumber !== currentIdForChatButtons) {
+            console.log(currentIdForChatButtons);
+            console.log(containerIdNumber);
+            return;
+        }
+    }
+    if (isChatButton) {
+        buttonGroupContainer.classList.add('make-opaque');
+        makeDisabledTextInput(false);
+        currentIdForChatButtons++;
+        switch (true) {
+            case clickedClassesArray.includes("button-root"):
+                sendMsg(clickedElement.textContent.trim());
+                break;
+            case clickedClassesArray.includes("button-parent"):
+                const textSpan = clickedElement.querySelector(".texto-botones");
+                if (textSpan) {
+                    const buttonText = textSpan.textContent.trim();
+                    sendMsg(buttonText);
+                } else {
+                    console.log("Parent clicked, but inner text span (.texto-botones) not found.");
+                }
+                break;
+            default:
+                break;
+        }
     }
 });
 
