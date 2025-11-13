@@ -209,6 +209,8 @@
   overflow-x: hidden;
   padding: 8px;
   padding-top: 0px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-window .input-area {
@@ -265,10 +267,9 @@
   word-spacing: 2.4px;
 }
 
-.chat-window .server-message-container .server-message p {
+.chat-window .server-message-container .server-message{
   font-size: 14px;
   text-align: justify;
-  margin: 8px;
   word-spacing: 2.4px;
 }
 
@@ -306,8 +307,8 @@
   }
 
   .chat-window .start-button-image-container {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
   }
 }
 
