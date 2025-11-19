@@ -27,11 +27,21 @@ let currentIdForChatButtons = 1;
 
 function serverConnect() {
     function appendMessage(text) {
+        if (Array.isArray(text)) {
+            text.forEach(message => {
+                const serverMessage = `<div class="server-message-container">
+        <span class="server-message">${message}</span>
+        </div>`;
+                chatArea.insertAdjacentHTML("beforeend", serverMessage);
+                updateScroll();
+            })
+        } else {
         const serverMessage = `<div class="server-message-container">
         <span class="server-message">${text}</span>
         </div>`;
         chatArea.insertAdjacentHTML("beforeend", serverMessage);
         updateScroll();
+        }
     };
     function create2Choice(button1Text, button2Text, disableTextInput) {
         let tempAorB = `
@@ -49,14 +59,49 @@ function serverConnect() {
             makeDisabledTextInput(true);
         }
     }
+    function buildNChoiceMenu(buttonTextArray, disableTextInput) {
+        const buttonGroupContainer = document.createElement('div');
+        buttonGroupContainer.className = 'contenedor-menu-N-botones';
+        buttonGroupContainer.id = `chat-menu-${currentIdForChatButtons}`;
+        buttonTextArray.forEach(buttonObject => {
+            const buttonDiv = document.createElement('div');
+            buttonDiv.className = 'contenedor-boton button-parent';
+            if (buttonObject.icon !== undefined) {
+                buttonDiv.insertAdjacentHTML('beforeend', buttonObject.icon);
+            }
+            const textSpan = document.createElement('span');
+            textSpan.className = 'texto-botones button-root';
+            textSpan.textContent = buttonObject.text;
+            if (buttonObject.hiddenText !== undefined) {
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'texto-oculto';
+                hiddenSpan.textContent = buttonObject.hiddenText;
+                textSpan.appendChild(hiddenSpan);
+            }
+            buttonDiv.appendChild(textSpan);
+            buttonGroupContainer.appendChild(buttonDiv);
+        })
+        chatArea.appendChild(buttonGroupContainer);
+        updateScroll();
+        if (disableTextInput) {
+            makeDisabledTextInput(true);
+        }
+    }
     xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
     });
-    xcallyWebSocket.on("serverMessage", (text, callback) => {
+    xcallyWebSocket.on("serverMessage", (text, multipleMessagesSignal, callback) => {
+        if (multipleMessagesSignal === "complex") {
+            text.forEach(message => {
+                appendMessage(message);
+            });
+            callback();
+        } else {
         appendMessage(text);
         callback();
+        }
     })
     xcallyWebSocket.on("disconnect", (reason) => {
         if (reason === "io server disconnect" || reason === "io client disconnect") {
@@ -77,7 +122,8 @@ function serverConnect() {
         chatCoverContentHandler("show close message");
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
-    xcallyWebSocket.on("clean shutdown", () => {
+    xcallyWebSocket.on("clean shutdown", (message) => {
+        appendMessage(message);
         const tempTimeout = setTimeout(() => {
             checkUserOut(tempTimeout);
         }, 3000)
@@ -91,22 +137,32 @@ function serverConnect() {
             console.error(error.message);
         }
     })
+    xcallyWebSocket.on("messageAndNButtons", (message, buttonTextArray, disableTextInput) => {
+        appendMessage(message);
+        try {
+            console.log(buttonTextArray);
+            buildNChoiceMenu(buttonTextArray, disableTextInput);
+        } catch (error) {
+            console.log("Error when creating N choice menu.");
+            console.error(error.message);
+        }
+    })
     xcallyWebSocket.on("getTypeOfPerson", () => {
         const naturalsArray = ["V", "E"];
         const corporatesArray = ["R", "J", "G", "C"];
         const typeOfPerson = userID[0];
-        if (!corporatesArray.includes(typeOfPerson) && !naturalsArray.includes(typeOfPerson)){
+        if (!corporatesArray.includes(typeOfPerson) && !naturalsArray.includes(typeOfPerson)) {
             console.log("There is some problem with the literal character in the user's ID");
         }
-        if(naturalsArray.includes(typeOfPerson)){
-            xcallyWebSocket.emit("clientMessage", "Persona natural", userID, (ACK)=> {
+        if (naturalsArray.includes(typeOfPerson)) {
+            xcallyWebSocket.emit("clientMessage", "Persona natural", userID, (ACK) => {
                 if (ACK != "Communication success") {
                     console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
                 }
             });
         }
-        if(corporatesArray.includes(typeOfPerson)){
-            xcallyWebSocket.emit("clientMessage", "Persona jurídica", userID, (ACK)=> {
+        if (corporatesArray.includes(typeOfPerson)) {
+            xcallyWebSocket.emit("clientMessage", "Persona jurídica", userID, (ACK) => {
                 if (ACK != "Communication success") {
                     console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
                 }
@@ -258,7 +314,7 @@ function chatStarter() {
         clearInterval(chatIntervalID.openInterval);
     }, 15000);
     try {
-        xcallyWebSocket.emit("clientMessage", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, (ACK) => {
+        xcallyWebSocket.emit("startChat", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, (ACK) => {
             if (ACK === "Communication success") {
                 ongoingChat = true;
                 chatIntervalID.openInterval = setInterval(() => {
@@ -296,13 +352,15 @@ window.addEventListener('click', function (event) {
 });
 
 chatCoverTextInput.addEventListener('keydown', (trigger) => {
-    if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter") {
+    let allowedChars = /^\d+$/;
+    if (chatCoverTextInput.value.trim() != "" && trigger.key === "Enter" && allowedChars.test(chatCoverTextInput.value)) {
         chatStarter();
     }
 })
 
 startChatButton.addEventListener("mouseover", () => {
-    if (chatCoverTextInput.value.trim() === "") {
+    let allowedChars = /^\d+$/;
+    if (chatCoverTextInput.value.trim() === "" || !allowedChars.test(chatCoverTextInput.value)) {
         startChatButton.classList.remove("conditional-not-opaque-not-working-button");
     } else {
         startChatButton.classList.add("conditional-not-opaque-not-working-button");
@@ -310,7 +368,8 @@ startChatButton.addEventListener("mouseover", () => {
 })
 
 chatCoverTextInput.addEventListener("input", () => {
-    if (chatCoverTextInput.value.trim() === "") {
+    let allowedChars = /^\d+$/;
+    if (chatCoverTextInput.value.trim() === "" || !allowedChars.test(chatCoverTextInput.value)) {
         startChatButton.classList.remove("conditional-not-opaque-not-working-button");
     } else {
         startChatButton.classList.add("conditional-not-opaque-not-working-button");
@@ -318,7 +377,8 @@ chatCoverTextInput.addEventListener("input", () => {
 })
 
 startChatButton.addEventListener("click", () => {
-    if (chatCoverTextInput.value.trim() != "") {
+    let allowedChars = /^\d+$/;
+    if (chatCoverTextInput.value.trim() != "" && allowedChars.test(chatCoverTextInput.value)) {
         chatStarter();
     }
 })
@@ -354,6 +414,14 @@ submitButton.addEventListener("click", () => {
     moveSubmitDown();
 });
 
+textInput.addEventListener("input", function(event) {
+    const forbiddenCharsRegex = /[^a-zA-Z0-9\s.,¿¡!?'"-]/g;
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    this.value = this.value.replace(forbiddenCharsRegex, '');
+    this.setSelectionRange(start, end);
+});
+
 textInput.addEventListener("keydown", (trigger) => {
     if (trigger.key === "Enter") {
         let userInput = textInput.value;
@@ -381,18 +449,30 @@ chatArea.addEventListener("click", async function (trigger) {
         makeDisabledTextInput(false);
         currentIdForChatButtons++;
         switch (true) {
-            case clickedClassesArray.includes("button-root"):
+            case clickedClassesArray.includes("button-root"): {
+                const hiddenText = clickedElement.querySelector(".texto-oculto");
+                if (hiddenText) {
+                    sendMsg(hiddenText.textContent.trim());
+                } else {
                 sendMsg(clickedElement.textContent.trim());
+                }
                 break;
-            case clickedClassesArray.includes("button-parent"):
+            }
+            case clickedClassesArray.includes("button-parent"): {
                 const textSpan = clickedElement.querySelector(".texto-botones");
                 if (textSpan) {
+                    const hiddenText = clickedElement.querySelector(".texto-oculto");
+                    if (hiddenText) {
+                        sendMsg(hiddenText.textContent.trim());
+                    } else {
                     const buttonText = textSpan.textContent.trim();
                     sendMsg(buttonText);
+                    }
                 } else {
                     console.log("Parent clicked, but inner text span (.texto-botones) not found.");
                 }
                 break;
+            }
             default:
                 break;
         }
