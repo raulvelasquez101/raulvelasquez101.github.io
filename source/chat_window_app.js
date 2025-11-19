@@ -415,7 +415,7 @@ submitButton.addEventListener("click", () => {
 });
 
 textInput.addEventListener("input", function(event) {
-    const forbiddenCharsRegex = /[^a-zA-Z0-9\s.,¿¡!?'"-]/g;
+    const forbiddenCharsRegex = /[^ \p{L}\p{N}\s.,¿¡!?'"-]/ug;
     const start = this.selectionStart;
     const end = this.selectionEnd;
     this.value = this.value.replace(forbiddenCharsRegex, '');
