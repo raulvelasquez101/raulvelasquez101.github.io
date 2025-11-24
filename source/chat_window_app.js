@@ -183,25 +183,36 @@ function makeDisabledTextInput(disable) {
     }
 }
 
-function sendMsg(textMessage) {
+function sendMsg(textMessage, silentMode, buttonMode) {
+    return new Promise((resolve, reject) => {
     if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
         if (textMessage.trim() != "") {
             xcallyWebSocket.emit("clientMessage", textMessage, userID, (ACK) => {
                 if (ACK === "Communication success") {
+                        if (!silentMode) {
                     let usermsg = `<div class="user-message-container">
     <span class="user-message">${textMessage}</span>
     </div>`;
                     textInput.value = "";
                     chatArea.insertAdjacentHTML("beforeend", usermsg);
                     updateScroll();
+                        };
+                        if (buttonMode) {
+                            resolve("Button sent message succesfully");
+                        };
+
                 } else {
                     console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
+                        resolve("Button did not send message succesfully");
                 }
             })
         }
     } else {
         console.log("There is a problem with either the user's message, the user's ID, or the web socket connection");
+            resolve("Button did not send message succesfully");
     }
+    })
+
 }
 
 function updateScroll() {
@@ -307,7 +318,7 @@ function chatStarter() {
     chatCoverContentHandler("pause and reset video");
     chatCoverContentHandler("show wait message");
     serverConnect();
-    userID = chatCoverListValue.textContent + chatCoverTextInput.value;
+    userID = chatCoverListValue.textContent.trim() + chatCoverTextInput.value.trim();
     chatIntervalID.closeInterval = setInterval(() => {
         chatCoverContentHandler("show close message");
         clearInterval(chatIntervalID.closeInterval);
@@ -414,7 +425,7 @@ submitButton.addEventListener("click", () => {
     moveSubmitDown();
 });
 
-textInput.addEventListener("input", function(event) {
+textInput.addEventListener("input", function (event) {
     const forbiddenCharsRegex = /[^ \p{L}\p{N}\s.,¿¡!?'"-]/ug;
     const start = this.selectionStart;
     const end = this.selectionEnd;
@@ -439,22 +450,18 @@ chatArea.addEventListener("click", async function (trigger) {
     if (buttonGroupContainer) {
         const containerIdNumber = parseInt(buttonGroupContainer.id.split('-').pop());
         if (containerIdNumber !== currentIdForChatButtons) {
-            console.log(currentIdForChatButtons);
-            console.log(containerIdNumber);
             return;
         }
     }
     if (isChatButton) {
-        buttonGroupContainer.classList.add('make-opaque');
-        makeDisabledTextInput(false);
-        currentIdForChatButtons++;
+        let buttonUseFlag = "";
         switch (true) {
             case clickedClassesArray.includes("button-root"): {
                 const hiddenText = clickedElement.querySelector(".texto-oculto");
                 if (hiddenText) {
-                    sendMsg(hiddenText.textContent.trim());
+                    buttonUseFlag = await sendMsg(hiddenText.textContent.trim(), "silentMode", "buttonMode");
                 } else {
-                sendMsg(clickedElement.textContent.trim());
+                    buttonUseFlag = await sendMsg(clickedElement.textContent.trim(), "silentMode", "buttonMode");
                 }
                 break;
             }
@@ -463,10 +470,10 @@ chatArea.addEventListener("click", async function (trigger) {
                 if (textSpan) {
                     const hiddenText = clickedElement.querySelector(".texto-oculto");
                     if (hiddenText) {
-                        sendMsg(hiddenText.textContent.trim());
+                        buttonUseFlag = await sendMsg(hiddenText.textContent.trim(), "silentMode", "buttonMode");
                     } else {
                     const buttonText = textSpan.textContent.trim();
-                    sendMsg(buttonText);
+                        buttonUseFlag = await sendMsg(buttonText, "silentMode", "buttonMode");
                     }
                 } else {
                     console.log("Parent clicked, but inner text span (.texto-botones) not found.");
@@ -475,6 +482,11 @@ chatArea.addEventListener("click", async function (trigger) {
             }
             default:
                 break;
+        }
+        if (buttonUseFlag === "Button sent message succesfully") {
+            buttonGroupContainer.classList.add('make-opaque');
+            makeDisabledTextInput(false);
+            currentIdForChatButtons++;
         }
     }
 });
