@@ -43,20 +43,30 @@ function serverConnect() {
         updateScroll();
         }
     };
-    function create2Choice(button1Text, button2Text, disableTextInput) {
-        let tempAorB = `
-                <div class="contenedor-menu-AorB" id="chat-menu-${currentIdForChatButtons}">
-                    <div class="contenedor-boton button-parent">
-                        <span class="texto-botones button-root"> ${button1Text} </span> 
-                    </div>
-                      <div class="contenedor-boton button-parent">
-                        <span class="texto-botones button-root"> ${button2Text} </span>
-                      </div>
-                </div>`;
-        chatArea.insertAdjacentHTML("beforeend", tempAorB);
+    function messageTypeManager(messageObject) {
+            if (messageObject.type === "text") {
+                appendMessage(messageObject.elements)
+                return;
+            }
+            if (messageObject.type === "buttonGroup") {
+                buildNChoiceMenu(messageObject.elements.buttons, messageObject.disableTextInput || false);
+                return;
+            }
+            if (messageObject.type === "image") {
+                console.log("Received the following image from backend: " + messageObject.elements);
+                let insertedImage = insertImageInChat(messageObject.elements);
+                insertedImage.addEventListener('click', () => {
+                    let url = messageObject.elements;
+                    const newWindow = window.open(url, '_blank');
+                    newWindow.opener = null;
+                });
+                insertedImage.addEventListener('load', () => {
         updateScroll();
-        if (disableTextInput) {
-            makeDisabledTextInput(true);
+                })
+            }
+            if (messageObject.type === "list") {
+                console.log("Received list from backend: " + messageObject.elements);
+                insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
         }
     }
     function buildNChoiceMenu(buttonTextArray, disableTextInput) {
@@ -78,6 +88,13 @@ function serverConnect() {
                 hiddenSpan.textContent = buttonObject.hiddenText;
                 textSpan.appendChild(hiddenSpan);
             }
+            if (buttonObject.hiddenLink !== undefined) {
+                console.log("Link in button object, detected: " + buttonObject.hiddenLink);
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'link-oculto';
+                hiddenSpan.textContent = buttonObject.hiddenLink;
+                textSpan.appendChild(hiddenSpan);
+            }
             buttonDiv.appendChild(textSpan);
             buttonGroupContainer.appendChild(buttonDiv);
         })
@@ -95,7 +112,7 @@ function serverConnect() {
     xcallyWebSocket.on("serverMessage", (text, multipleMessagesSignal, callback) => {
         if (multipleMessagesSignal === "complex") {
             text.forEach(message => {
-                appendMessage(message);
+                messageTypeManager(message);
             });
             callback();
         } else {
@@ -128,22 +145,21 @@ function serverConnect() {
             checkUserOut(tempTimeout);
         }, 3000)
     })
-    xcallyWebSocket.on("messageAndTwoButtons", (message, button1Text, button2Text, disableTextInput) => {
-        appendMessage(message);
+    xcallyWebSocket.on("messageAndNButtons", (messages, buttonTextArray, disableTextInput) => {
+        messages.forEach((messageObject) => {
+            if (typeof messageObject === "string") {
+                console.log("messageAndNButtons event received an array of <Object Strings>")
+                let parsedMessageObject = JSON.parse(messageObject);
+                messageTypeManager(parsedMessageObject);
+            }
+            messageTypeManager(messageObject);
+        })
         try {
-            create2Choice(button1Text, button2Text, disableTextInput);
-        } catch (error) {
-            console.log("Error when creating two choice menu.");
-            console.error(error.message);
-        }
-    })
-    xcallyWebSocket.on("messageAndNButtons", (message, buttonTextArray, disableTextInput) => {
-        appendMessage(message);
-        try {
+            console.log("The buttons text array is...")
             console.log(buttonTextArray);
             buildNChoiceMenu(buttonTextArray, disableTextInput);
         } catch (error) {
-            console.log("Error when creating N choice menu.");
+            console.log("Error when creating an N choice menu.");
             console.error(error.message);
         }
     })
@@ -169,6 +185,41 @@ function serverConnect() {
             });
         }
     })
+}
+
+function insertListInChat(listBulletpoints, listTitle){
+    const listContainer = document.createElement('div');
+    listContainer.className = 'list-in-chat';
+    const titleElement = document.createElement('h3');
+    titleElement.className = "list-header";
+    const strongTitle = document.createElement('span'); 
+    strongTitle.textContent = listTitle;
+    titleElement.appendChild(strongTitle);
+    listContainer.appendChild(titleElement);
+    const ulElement = document.createElement('ul');
+    ulElement.className = "proper-list";
+    listBulletpoints.forEach(pointText => {
+        const liElement = document.createElement('li');
+        liElement.textContent = pointText;
+        liElement.className = "list-item";
+        ulElement.appendChild(liElement);
+    });
+    listContainer.appendChild(ulElement);
+    chatArea.appendChild(listContainer);
+}
+
+function insertImageInChat(image, sourceType) {
+    let insertion;
+    switch (sourceType) {
+        default:
+            insertion = document.createElement('img');
+            insertion.src = image;
+            insertion.className = "image-in-chat"
+            chatArea.appendChild(insertion);
+            updateScroll();
+            break;
+    }
+    return insertion;
 }
 
 function makeDisabledTextInput(disable) {
@@ -442,6 +493,26 @@ textInput.addEventListener("keydown", (trigger) => {
 });
 
 chatArea.addEventListener("click", async function (trigger) {
+    async function buttonActionManager(actualButton) {
+        const hiddenText = actualButton.querySelector(".texto-oculto");
+        if (hiddenText) {
+            return await sendMsg(hiddenText.textContent.trim(), "silentMode", "buttonMode");
+        }
+        const hiddenLink = actualButton.querySelector(".link-oculto");
+        if (hiddenLink) {
+            try {
+                let url = hiddenLink.textContent.trim();
+                const newWindow = window.open(url, '_blank');
+                newWindow.opener = null;
+                return "Link opened succesfully";
+            } catch (error) {
+                console.error(error.message);
+                return "Error when opening " + url;
+            }
+        }
+        return await sendMsg(actualButton.textContent.trim(), "silentMode", "buttonMode");
+
+    }
     let clickedElement = trigger.target;
     const possibleClasses = ["texto-botones", "contenedor-boton"];
     const clickedClassesArray = Array.from(clickedElement.classList);
@@ -457,24 +528,13 @@ chatArea.addEventListener("click", async function (trigger) {
         let buttonUseFlag = "";
         switch (true) {
             case clickedClassesArray.includes("button-root"): {
-                const hiddenText = clickedElement.querySelector(".texto-oculto");
-                if (hiddenText) {
-                    buttonUseFlag = await sendMsg(hiddenText.textContent.trim(), "silentMode", "buttonMode");
-                } else {
-                    buttonUseFlag = await sendMsg(clickedElement.textContent.trim(), "silentMode", "buttonMode");
-                }
+                buttonUseFlag = await buttonActionManager(clickedElement);
                 break;
             }
             case clickedClassesArray.includes("button-parent"): {
                 const textSpan = clickedElement.querySelector(".texto-botones");
                 if (textSpan) {
-                    const hiddenText = clickedElement.querySelector(".texto-oculto");
-                    if (hiddenText) {
-                        buttonUseFlag = await sendMsg(hiddenText.textContent.trim(), "silentMode", "buttonMode");
-                    } else {
-                    const buttonText = textSpan.textContent.trim();
-                        buttonUseFlag = await sendMsg(buttonText, "silentMode", "buttonMode");
-                    }
+                    buttonUseFlag = await buttonActionManager(textSpan);
                 } else {
                     console.log("Parent clicked, but inner text span (.texto-botones) not found.");
                 }
