@@ -36,11 +36,11 @@ function serverConnect() {
                 updateScroll();
             })
         } else {
-        const serverMessage = `<div class="server-message-container">
+            const serverMessage = `<div class="server-message-container">
         <span class="server-message">${text}</span>
         </div>`;
-        chatArea.insertAdjacentHTML("beforeend", serverMessage);
-        updateScroll();
+            chatArea.insertAdjacentHTML("beforeend", serverMessage);
+            updateScroll();
         }
     };
     function messageTypeManager(messageObject) {
@@ -61,14 +61,14 @@ function serverConnect() {
                     newWindow.opener = null;
                 });
                 insertedImage.addEventListener('load', () => {
-        updateScroll();
+                    updateScroll();
                 })
             }
             if (messageObject.type === "list") {
                 console.log("Received list from backend: " + messageObject.elements);
                 insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
+            }
         }
-    }
     function buildNChoiceMenu(buttonTextArray, disableTextInput) {
         const buttonGroupContainer = document.createElement('div');
         buttonGroupContainer.className = 'contenedor-menu-N-botones';
@@ -116,8 +116,8 @@ function serverConnect() {
             });
             callback();
         } else {
-        appendMessage(text);
-        callback();
+            appendMessage(text);
+            callback();
         }
     })
     xcallyWebSocket.on("disconnect", (reason) => {
@@ -139,8 +139,15 @@ function serverConnect() {
         chatCoverContentHandler("show close message");
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
-    xcallyWebSocket.on("clean shutdown", (message) => {
-        appendMessage(message);
+    xcallyWebSocket.on("clean shutdown", (message, multipleMessagesSignal) => {
+        if (multipleMessagesSignal === "complex"){
+        message.forEach(bubble => {
+                messageTypeManager(bubble);
+            });
+        }
+        else {
+            appendMessage(message);
+        }
         const tempTimeout = setTimeout(() => {
             checkUserOut(tempTimeout);
         }, 3000)
@@ -236,32 +243,32 @@ function makeDisabledTextInput(disable) {
 
 function sendMsg(textMessage, silentMode, buttonMode) {
     return new Promise((resolve, reject) => {
-    if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
-        if (textMessage.trim() != "") {
-            xcallyWebSocket.emit("clientMessage", textMessage, userID, (ACK) => {
-                if (ACK === "Communication success") {
+        if (textMessage != undefined && userID != undefined && xcallyWebSocket != null) {
+            if (textMessage.trim() != "") {
+                xcallyWebSocket.emit("clientMessage", textMessage, userID, (ACK) => {
+                    if (ACK === "Communication success") {
                         if (!silentMode) {
-                    let usermsg = `<div class="user-message-container">
-    <span class="user-message">${textMessage}</span>
-    </div>`;
-                    textInput.value = "";
-                    chatArea.insertAdjacentHTML("beforeend", usermsg);
-                    updateScroll();
+                            let usermsg = `<div class="user-message-container">
+                                                <span class="user-message">${textMessage}</span>
+                                            </div>`;
+                            textInput.value = "";
+                            chatArea.insertAdjacentHTML("beforeend", usermsg);
+                            updateScroll();
                         };
                         if (buttonMode) {
                             resolve("Button sent message succesfully");
                         };
 
-                } else {
-                    console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
+                    } else {
+                        console.log("There is a problem with either the user's message, the user's ID, or the web socket connection, here is the message:" + ACK);
                         resolve("Button did not send message succesfully");
-                }
-            })
-        }
-    } else {
-        console.log("There is a problem with either the user's message, the user's ID, or the web socket connection");
+                    }
+                })
+            }
+        } else {
+            console.log("There is a problem with either the user's message, the user's ID, or the web socket connection");
             resolve("Button did not send message succesfully");
-    }
+        }
     })
 
 }
