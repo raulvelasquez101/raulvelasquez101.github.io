@@ -24,6 +24,7 @@ let userID; // this is used to identify the user on the CC server;
 let chatIntervalID = { closeInterval: null, openInterval: null };
 let ongoingChat = false;
 let currentIdForChatButtons = 1;
+let previousEstablishedConversationSocketId = null;
 
 function serverConnect() {
     function appendMessage(text) {
@@ -44,31 +45,31 @@ function serverConnect() {
         }
     };
     function messageTypeManager(messageObject) {
-            if (messageObject.type === "text") {
-                appendMessage(messageObject.elements)
-                return;
-            }
-            if (messageObject.type === "buttonGroup") {
-                buildNChoiceMenu(messageObject.elements.buttons, messageObject.disableTextInput || false);
-                return;
-            }
-            if (messageObject.type === "image") {
-                console.log("Received the following image from backend: " + messageObject.elements);
-                let insertedImage = insertImageInChat(messageObject.elements);
-                insertedImage.addEventListener('click', () => {
-                    let url = messageObject.elements;
-                    const newWindow = window.open(url, '_blank');
-                    newWindow.opener = null;
-                });
-                insertedImage.addEventListener('load', () => {
-                    updateScroll();
-                })
-            }
-            if (messageObject.type === "list") {
-                console.log("Received list from backend: " + messageObject.elements);
-                insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
-            }
+        if (messageObject.type === "text") {
+            appendMessage(messageObject.elements)
+            return;
         }
+        if (messageObject.type === "buttonGroup") {
+            buildNChoiceMenu(messageObject.elements.buttons, messageObject.disableTextInput || false);
+            return;
+        }
+        if (messageObject.type === "image") {
+            console.log("Received the following image from backend: " + messageObject.elements);
+            let insertedImage = insertImageInChat(messageObject.elements);
+            insertedImage.addEventListener('click', () => {
+                let url = messageObject.elements;
+                const newWindow = window.open(url, '_blank');
+                newWindow.opener = null;
+            });
+            insertedImage.addEventListener('load', () => {
+                updateScroll();
+            })
+        }
+        if (messageObject.type === "list") {
+            console.log("Received list from backend: " + messageObject.elements);
+            insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
+        }
+    }
     function buildNChoiceMenu(buttonTextArray, disableTextInput) {
         const buttonGroupContainer = document.createElement('div');
         buttonGroupContainer.className = 'contenedor-menu-N-botones';
@@ -104,11 +105,19 @@ function serverConnect() {
             makeDisabledTextInput(true);
         }
     }
-    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
+    xcallyWebSocket = io("https://cx.oltpsys.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
     });
+    xcallyWebSocket.io.on('reconnect', () => {
+        xcallyWebSocket.emit("configurationAfterRecconnection", userID, previousEstablishedConversationSocketId, (ACK) => {
+            if (ACK !== "Succesful state transfer to new socket") {
+                console.log(ACK);
+                location.reload();
+            }
+        })
+    })
     xcallyWebSocket.on("serverMessage", (text, multipleMessagesSignal, callback) => {
         if (multipleMessagesSignal === "complex") {
             text.forEach(message => {
@@ -120,15 +129,11 @@ function serverConnect() {
             callback();
         }
     })
-    xcallyWebSocket.on("disconnect", (reason) => {
-        if (reason === "io server disconnect" || reason === "io client disconnect") {
-            appendMessage("¡Gracias por contactarnos! Hasta luego.")
-        }
-    })
-    xcallyWebSocket.on("reconnect_failed", () => {
-        if (chatPopup.classList.contains("show")) {
-            chatCoverContentHandler("show close message");
-        }
+    xcallyWebSocket.io.on("reconnect_failed", () => {
+        appendMessage("¡Gracias por contactarnos! Hasta luego.");
+        setTimeout(() => {
+            checkUserOut();
+        }, 3000)
     })
     xcallyWebSocket.on("shutdown", (text) => {
         if (text != undefined) {
@@ -140,8 +145,8 @@ function serverConnect() {
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
     xcallyWebSocket.on("clean shutdown", (message, multipleMessagesSignal) => {
-        if (multipleMessagesSignal === "complex"){
-        message.forEach(bubble => {
+        if (multipleMessagesSignal === "complex") {
+            message.forEach(bubble => {
                 messageTypeManager(bubble);
             });
         }
@@ -194,12 +199,12 @@ function serverConnect() {
     })
 }
 
-function insertListInChat(listBulletpoints, listTitle){
+function insertListInChat(listBulletpoints, listTitle) {
     const listContainer = document.createElement('div');
     listContainer.className = 'list-in-chat';
     const titleElement = document.createElement('h3');
     titleElement.className = "list-header";
-    const strongTitle = document.createElement('span'); 
+    const strongTitle = document.createElement('span');
     strongTitle.textContent = listTitle;
     titleElement.appendChild(strongTitle);
     listContainer.appendChild(titleElement);
@@ -283,7 +288,7 @@ function checkUserOut(tempTimeoutOrInterval) {
     clearInterval(chatIntervalID.closeInterval);
     clearInterval(chatIntervalID.openInterval);
     chatCover.classList.remove("hide");
-    chatPopup.classList.toggle("show");
+    chatPopup.classList.remove("show");
     chatCoverContentHandler("hide wait and close messages")
     ongoingChat = false;
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
@@ -385,6 +390,7 @@ function chatStarter() {
     try {
         xcallyWebSocket.emit("startChat", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, (ACK) => {
             if (ACK === "Communication success") {
+                previousEstablishedConversationSocketId = xcallyWebSocket.id;
                 ongoingChat = true;
                 chatIntervalID.openInterval = setInterval(() => {
                     chatCoverContentHandler("hide wait and close messages");
