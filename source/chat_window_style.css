@@ -384,7 +384,9 @@
 }
 
 .texto-oculto,
-.link-oculto {
+.link-oculto,
+.accion,
+.contador-mensajes {
   display: none;
 }
 
