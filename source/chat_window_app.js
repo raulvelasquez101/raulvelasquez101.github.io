@@ -70,10 +70,12 @@ function serverConnect() {
             insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
         }
     }
-    function buildNChoiceMenu(buttonTextArray, disableTextInput) {
+    function buildNChoiceMenu(buttonTextArray, disableTextInput, noIdButtonToggle) {
         const buttonGroupContainer = document.createElement('div');
         buttonGroupContainer.className = 'contenedor-menu-N-botones';
-        buttonGroupContainer.id = `chat-menu-${currentIdForChatButtons}`;
+        if (noIdButtonToggle !== true) {
+            buttonGroupContainer.id = `chat-menu-${currentIdForChatButtons}`;
+        }
         buttonTextArray.forEach(buttonObject => {
             const buttonDiv = document.createElement('div');
             buttonDiv.className = 'contenedor-boton button-parent';
@@ -94,6 +96,20 @@ function serverConnect() {
                 const hiddenSpan = document.createElement('span');
                 hiddenSpan.className = 'link-oculto';
                 hiddenSpan.textContent = buttonObject.hiddenLink;
+                textSpan.appendChild(hiddenSpan);
+            }
+            if (buttonObject.action !== undefined) {
+                console.log("Action in button object, detected: " + buttonObject.action);
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'accion';
+                hiddenSpan.textContent = buttonObject.action;
+                textSpan.appendChild(hiddenSpan);
+            }
+            if (buttonObject.messageCount !== undefined) {
+                console.log("Message count in button object, detected: " + buttonObject.messageCount);
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'contador-mensajes';
+                hiddenSpan.textContent = buttonObject.messageCount;
                 textSpan.appendChild(hiddenSpan);
             }
             buttonDiv.appendChild(textSpan);
@@ -157,7 +173,7 @@ function serverConnect() {
             checkUserOut(tempTimeout);
         }, 3000)
     })
-    xcallyWebSocket.on("messageAndNButtons", (messages, buttonTextArray, disableTextInput) => {
+    xcallyWebSocket.on("messageAndNButtons", (messages, buttonTextArray, disableTextInput, noIdButtonToggle) => {
         messages.forEach((messageObject) => {
             if (typeof messageObject === "string") {
                 console.log("messageAndNButtons event received an array of <Object Strings>")
@@ -169,7 +185,7 @@ function serverConnect() {
         try {
             console.log("The buttons text array is...")
             console.log(buttonTextArray);
-            buildNChoiceMenu(buttonTextArray, disableTextInput);
+            buildNChoiceMenu(buttonTextArray, disableTextInput, noIdButtonToggle);
         } catch (error) {
             console.log("Error when creating an N choice menu.");
             console.error(error.message);
@@ -520,7 +536,33 @@ chatArea.addEventListener("click", async function (trigger) {
                 return "Link opened succesfully";
             } catch (error) {
                 console.error(error.message);
-                return "Error when opening " + url;
+                return "Error when opening " + hiddenLink.textContent.trim();
+            }
+        }
+        const action = actualButton.querySelector(".accion");
+        if (action) {
+            try {
+                const actionType = action.textContent.trim();
+                if (actionType === "continue") {
+                    return await new Promise((resolve) => {
+                        xcallyWebSocket.emit("refreshSession", userID, (ACK) => {
+                            if (ACK === "Succesful socket refresh") {
+                                const count = parseInt(actualButton.querySelector(".contador-mensajes").textContent.trim());
+                                for (let i = 0; i < count; i++) {
+                                    chatArea.lastChild.remove();
+                                }
+                                resolve("Continue performed succesfully");
+                            } else {
+                                resolve("Error when performing continue");
+                            }
+                        });
+                    });
+                } else {
+                    return "Action " + actionType + " not found";
+                }
+            } catch (error) {
+                console.error(error.message);
+                return "Error when performing " + action.textContent.trim();
             }
         }
         return await sendMsg(actualButton.textContent.trim(), "silentMode", "buttonMode");
