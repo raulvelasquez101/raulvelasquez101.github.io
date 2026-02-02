@@ -213,6 +213,19 @@ function serverConnect() {
             });
         }
     })
+    xcallyWebSocket.on('serverImage', (buffer, contentType, callback) => {
+        const blob = new Blob([buffer], { type: contentType });
+        const imageURL = URL.createObjectURL(blob);
+        let insertedImage = insertImageInChat(imageURL);
+        insertedImage.addEventListener('click', () => {
+            const newWindow = window.open(imageURL, '_blank');
+            newWindow.opener = null;
+        });
+        insertedImage.addEventListener('load', () => {
+            updateScroll();
+        })
+        callback();
+    })
 }
 
 function insertListInChat(listBulletpoints, listTitle) {
