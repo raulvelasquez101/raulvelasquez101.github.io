@@ -615,6 +615,8 @@ chatArea.addEventListener("click", async function (trigger) {
             buttonGroupContainer.classList.add('make-opaque');
             makeDisabledTextInput(false);
             currentIdForChatButtons++;
+        } else {
+            console.log(buttonUseFlag);
         }
     }
 });
