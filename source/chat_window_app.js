@@ -564,6 +564,7 @@ chatArea.addEventListener("click", async function (trigger) {
                                 for (let i = 0; i < count; i++) {
                                     chatArea.lastChild.remove();
                                 }
+                                makeDisabledTextInput(false);
                                 resolve("Continue performed succesfully");
                             } else {
                                 resolve("Error when performing continue");
