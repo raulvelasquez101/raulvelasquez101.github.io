@@ -24,6 +24,7 @@ let userID; // this is used to identify the user on the CC server;
 let chatIntervalID = { closeInterval: null, openInterval: null };
 let ongoingChat = false;
 let currentIdForChatButtons = 1;
+let previousEstablishedConversationSocketId = null;
 
 function serverConnect() {
     function appendMessage(text) {
@@ -44,35 +45,37 @@ function serverConnect() {
         }
     };
     function messageTypeManager(messageObject) {
-            if (messageObject.type === "text") {
-                appendMessage(messageObject.elements)
-                return;
-            }
-            if (messageObject.type === "buttonGroup") {
-                buildNChoiceMenu(messageObject.elements.buttons, messageObject.disableTextInput || false);
-                return;
-            }
-            if (messageObject.type === "image") {
-                console.log("Received the following image from backend: " + messageObject.elements);
-                let insertedImage = insertImageInChat(messageObject.elements);
-                insertedImage.addEventListener('click', () => {
-                    let url = messageObject.elements;
-                    const newWindow = window.open(url, '_blank');
-                    newWindow.opener = null;
-                });
-                insertedImage.addEventListener('load', () => {
-                    updateScroll();
-                })
-            }
-            if (messageObject.type === "list") {
-                console.log("Received list from backend: " + messageObject.elements);
-                insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
-            }
+        if (messageObject.type === "text") {
+            appendMessage(messageObject.elements)
+            return;
         }
-    function buildNChoiceMenu(buttonTextArray, disableTextInput) {
+        if (messageObject.type === "buttonGroup") {
+            buildNChoiceMenu(messageObject.elements.buttons, messageObject.disableTextInput || false);
+            return;
+        }
+        if (messageObject.type === "image") {
+            console.log("Received the following image from backend: " + messageObject.elements);
+            let insertedImage = insertImageInChat(messageObject.elements);
+            insertedImage.addEventListener('click', () => {
+                let url = messageObject.elements;
+                const newWindow = window.open(url, '_blank');
+                newWindow.opener = null;
+            });
+            insertedImage.addEventListener('load', () => {
+                updateScroll();
+            })
+        }
+        if (messageObject.type === "list") {
+            console.log("Received list from backend: " + messageObject.elements);
+            insertListInChat(messageObject.elements.bulletpoints, messageObject.elements.title);
+        }
+    }
+    function buildNChoiceMenu(buttonTextArray, disableTextInput, noIdButtonToggle) {
         const buttonGroupContainer = document.createElement('div');
         buttonGroupContainer.className = 'contenedor-menu-N-botones';
-        buttonGroupContainer.id = `chat-menu-${currentIdForChatButtons}`;
+        if (noIdButtonToggle !== true) {
+            buttonGroupContainer.id = `chat-menu-${currentIdForChatButtons}`;
+        }
         buttonTextArray.forEach(buttonObject => {
             const buttonDiv = document.createElement('div');
             buttonDiv.className = 'contenedor-boton button-parent';
@@ -95,6 +98,20 @@ function serverConnect() {
                 hiddenSpan.textContent = buttonObject.hiddenLink;
                 textSpan.appendChild(hiddenSpan);
             }
+            if (buttonObject.action !== undefined) {
+                console.log("Action in button object, detected: " + buttonObject.action);
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'accion';
+                hiddenSpan.textContent = buttonObject.action;
+                textSpan.appendChild(hiddenSpan);
+            }
+            if (buttonObject.messageCount !== undefined) {
+                console.log("Message count in button object, detected: " + buttonObject.messageCount);
+                const hiddenSpan = document.createElement('span');
+                hiddenSpan.className = 'contador-mensajes';
+                hiddenSpan.textContent = buttonObject.messageCount;
+                textSpan.appendChild(hiddenSpan);
+            }
             buttonDiv.appendChild(textSpan);
             buttonGroupContainer.appendChild(buttonDiv);
         })
@@ -104,11 +121,19 @@ function serverConnect() {
             makeDisabledTextInput(true);
         }
     }
-    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
+    xcallyWebSocket = io("https://cx.oltpsys.com", {
         path: "/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
     });
+    xcallyWebSocket.io.on('reconnect', () => {
+        xcallyWebSocket.emit("configurationAfterRecconnection", userID, previousEstablishedConversationSocketId, (ACK) => {
+            if (ACK !== "Succesful state transfer to new socket") {
+                console.log(ACK);
+                location.reload();
+            }
+        })
+    })
     xcallyWebSocket.on("serverMessage", (text, multipleMessagesSignal, callback) => {
         if (multipleMessagesSignal === "complex") {
             text.forEach(message => {
@@ -120,15 +145,11 @@ function serverConnect() {
             callback();
         }
     })
-    xcallyWebSocket.on("disconnect", (reason) => {
-        if (reason === "io server disconnect" || reason === "io client disconnect") {
-            appendMessage("¡Gracias por contactarnos! Hasta luego.")
-        }
-    })
-    xcallyWebSocket.on("reconnect_failed", () => {
-        if (chatPopup.classList.contains("show")) {
-            chatCoverContentHandler("show close message");
-        }
+    xcallyWebSocket.io.on("reconnect_failed", () => {
+        appendMessage("¡Gracias por contactarnos! Hasta luego.");
+        setTimeout(() => {
+            checkUserOut();
+        }, 3000)
     })
     xcallyWebSocket.on("shutdown", (text) => {
         if (text != undefined) {
@@ -140,8 +161,8 @@ function serverConnect() {
         xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
     })
     xcallyWebSocket.on("clean shutdown", (message, multipleMessagesSignal) => {
-        if (multipleMessagesSignal === "complex"){
-        message.forEach(bubble => {
+        if (multipleMessagesSignal === "complex") {
+            message.forEach(bubble => {
                 messageTypeManager(bubble);
             });
         }
@@ -152,7 +173,7 @@ function serverConnect() {
             checkUserOut(tempTimeout);
         }, 3000)
     })
-    xcallyWebSocket.on("messageAndNButtons", (messages, buttonTextArray, disableTextInput) => {
+    xcallyWebSocket.on("messageAndNButtons", (messages, buttonTextArray, disableTextInput, noIdButtonToggle) => {
         messages.forEach((messageObject) => {
             if (typeof messageObject === "string") {
                 console.log("messageAndNButtons event received an array of <Object Strings>")
@@ -164,7 +185,7 @@ function serverConnect() {
         try {
             console.log("The buttons text array is...")
             console.log(buttonTextArray);
-            buildNChoiceMenu(buttonTextArray, disableTextInput);
+            buildNChoiceMenu(buttonTextArray, disableTextInput, noIdButtonToggle);
         } catch (error) {
             console.log("Error when creating an N choice menu.");
             console.error(error.message);
@@ -192,14 +213,27 @@ function serverConnect() {
             });
         }
     })
+    xcallyWebSocket.on('serverImage', (buffer, contentType, callback) => {
+        const blob = new Blob([buffer], { type: contentType });
+        const imageURL = URL.createObjectURL(blob);
+        let insertedImage = insertImageInChat(imageURL);
+        insertedImage.addEventListener('click', () => {
+            const newWindow = window.open(imageURL, '_blank');
+            newWindow.opener = null;
+        });
+        insertedImage.addEventListener('load', () => {
+            updateScroll();
+        })
+        callback();
+    })
 }
 
-function insertListInChat(listBulletpoints, listTitle){
+function insertListInChat(listBulletpoints, listTitle) {
     const listContainer = document.createElement('div');
     listContainer.className = 'list-in-chat';
     const titleElement = document.createElement('h3');
     titleElement.className = "list-header";
-    const strongTitle = document.createElement('span'); 
+    const strongTitle = document.createElement('span');
     strongTitle.textContent = listTitle;
     titleElement.appendChild(strongTitle);
     listContainer.appendChild(titleElement);
@@ -283,7 +317,7 @@ function checkUserOut(tempTimeoutOrInterval) {
     clearInterval(chatIntervalID.closeInterval);
     clearInterval(chatIntervalID.openInterval);
     chatCover.classList.remove("hide");
-    chatPopup.classList.toggle("show");
+    chatPopup.classList.remove("show");
     chatCoverContentHandler("hide wait and close messages")
     ongoingChat = false;
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
@@ -385,6 +419,7 @@ function chatStarter() {
     try {
         xcallyWebSocket.emit("startChat", `El cliente ${userID} ha iniciado una interacción de Chat`, userID, (ACK) => {
             if (ACK === "Communication success") {
+                previousEstablishedConversationSocketId = xcallyWebSocket.id;
                 ongoingChat = true;
                 chatIntervalID.openInterval = setInterval(() => {
                     chatCoverContentHandler("hide wait and close messages");
@@ -514,7 +549,34 @@ chatArea.addEventListener("click", async function (trigger) {
                 return "Link opened succesfully";
             } catch (error) {
                 console.error(error.message);
-                return "Error when opening " + url;
+                return "Error when opening " + hiddenLink.textContent.trim();
+            }
+        }
+        const action = actualButton.querySelector(".accion");
+        if (action) {
+            try {
+                const actionType = action.textContent.trim();
+                if (actionType === "continue") {
+                    return await new Promise((resolve) => {
+                        xcallyWebSocket.emit("refreshSession", userID, (ACK) => {
+                            if (ACK === "Succesful socket refresh") {
+                                const count = parseInt(actualButton.querySelector(".contador-mensajes").textContent.trim());
+                                for (let i = 0; i < count; i++) {
+                                    chatArea.lastChild.remove();
+                                }
+                                makeDisabledTextInput(false);
+                                resolve("Continue performed succesfully");
+                            } else {
+                                resolve("Error when performing continue");
+                            }
+                        });
+                    });
+                } else {
+                    return "Action " + actionType + " not found";
+                }
+            } catch (error) {
+                console.error(error.message);
+                return "Error when performing " + action.textContent.trim();
             }
         }
         return await sendMsg(actualButton.textContent.trim(), "silentMode", "buttonMode");
@@ -554,6 +616,8 @@ chatArea.addEventListener("click", async function (trigger) {
             buttonGroupContainer.classList.add('make-opaque');
             makeDisabledTextInput(false);
             currentIdForChatButtons++;
+        } else {
+            console.log(buttonUseFlag);
         }
     }
 });
