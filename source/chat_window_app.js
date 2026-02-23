@@ -25,25 +25,10 @@ let chatIntervalID = { closeInterval: null, openInterval: null };
 let ongoingChat = false;
 let currentIdForChatButtons = 1;
 let previousEstablishedConversationSocketId = null;
+let CSAT = 0;
+let NPS = 0;
 
 function serverConnect() {
-    function appendMessage(text) {
-        if (Array.isArray(text)) {
-            text.forEach(message => {
-                const serverMessage = `<div class="server-message-container">
-        <span class="server-message">${message}</span>
-        </div>`;
-                chatArea.insertAdjacentHTML("beforeend", serverMessage);
-                updateScroll();
-            })
-        } else {
-            const serverMessage = `<div class="server-message-container">
-        <span class="server-message">${text}</span>
-        </div>`;
-            chatArea.insertAdjacentHTML("beforeend", serverMessage);
-            updateScroll();
-        }
-    };
     function messageTypeManager(messageObject) {
         if (messageObject.type === "text") {
             appendMessage(messageObject.elements)
@@ -228,6 +213,24 @@ function serverConnect() {
     })
 }
 
+function appendMessage(text) {
+    if (Array.isArray(text)) {
+        text.forEach(message => {
+            const serverMessage = `<div class="server-message-container">
+        <span class="server-message">${message}</span>
+        </div>`;
+            chatArea.insertAdjacentHTML("beforeend", serverMessage);
+            updateScroll();
+        })
+    } else {
+        const serverMessage = `<div class="server-message-container">
+        <span class="server-message">${text}</span>
+        </div>`;
+        chatArea.insertAdjacentHTML("beforeend", serverMessage);
+        updateScroll();
+    }
+};
+
 function insertListInChat(listBulletpoints, listTitle) {
     const listContainer = document.createElement('div');
     listContainer.className = 'list-in-chat';
@@ -309,6 +312,69 @@ function sendMsg(textMessage, silentMode, buttonMode) {
 
 function updateScroll() {
     chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function rateInteraction() {
+    function fillRatingStars(rating) {
+        for (let currentStar = 1; currentStar <= 5; currentStar++) {
+            let currentStarElement = document.getElementById(`estrella-${currentStar}`);
+            currentStar <= rating ? currentStarElement.innerHTML = `<path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/>` : currentStarElement.innerHTML = `<path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/>`;
+        }
+    }
+    function obtainNetPromoterScore() {
+        starContainer.removeEventListener("click", obtainNetPromoterScore);
+        appendMessage("¿Qué tan probable es que recomiendes esta empresa a tus amigos, compañeros de trabajo o familiares?");
+        const netPromoterForm = `
+        <div class="contenedor-formulario-nps">
+        <div class="contenedor-botones-nps">
+        <div class="calificacion-nps"> 1 </div>
+        <div class="calificacion-nps"> 2 </div>
+        <div class="calificacion-nps"> 3 </div>
+        <div class="calificacion-nps"> 4 </div>
+        <div class="calificacion-nps"> 5 </div>
+        <div class="calificacion-nps"> 6 </div>
+        <div class="calificacion-nps"> 7 </div>
+        <div class="calificacion-nps"> 8 </div>
+        <div class="calificacion-nps"> 9 </div>
+        <div class="calificacion-nps"> 10 </div>
+        </div>
+        <div class="contenedor-texto-nps">
+        <span class="texto-nps-pequeno"> Poco probable </span>
+        <span class="texto-nps-pequeno"> Muy probable </span>
+        </div>
+        </div>`;
+        chatArea.insertAdjacentHTML("beforeend", netPromoterForm);
+    }
+    ongoingChat = false;
+    appendMessage("Antes de despedirte, por favor califica tu satisfacción con nuestra atención");
+    const starForm = `
+                <svg class="stars" id="estrella-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>
+                <svg class="stars" id="estrella-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>
+                <svg class="stars" id="estrella-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>
+                <svg class="stars" id="estrella-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>
+                <svg class="stars" id="estrella-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>`;
+    const starContainer = document.createElement('div');
+    starContainer.className = 'contenedor-rating';
+    starContainer.insertAdjacentHTML("beforeend", starForm);
+    chatArea.appendChild(starContainer);
+    updateScroll();
+    // const sendRatingButton = `<div class="contenedor-menu-N-botones"><div class="contenedor-boton button-parent"> <span class="texto-botones button-root"> Calificar atención <span class="accion">rateTheChat</span></span></div></div>`
+    // chatArea.insertAdjacentHTML("beforeend",sendRatingButton);
+    starContainer.addEventListener("mouseover", (trigger) => {
+        starElementIcon = trigger.target.closest('.stars');
+        if (starElementIcon) {
+            let starId = parseInt(starElementIcon.id.split('-')[1]);
+            fillRatingStars(starId);
+        }
+    });
+    starContainer.addEventListener("mouseout", () => {
+        fillRatingStars(CSAT);
+    })
+    starContainer.addEventListener("click", (trigger) => {
+        if ( Array.from(trigger.target.parentElement.classList).includes("stars") || Array.from(trigger.target.classList).includes("stars") ) {
+        obtainNetPromoterScore();
+        }
+    });
 }
 
 function checkUserOut(tempTimeoutOrInterval) {
@@ -509,7 +575,11 @@ openChatButtonText.addEventListener("click", () => {
 
 closeChatButton.addEventListener("click", () => {
     chatCoverContentHandler("pause and reset video")
-    checkUserOut();
+    if (ongoingChat) {
+        rateInteraction();
+    } else {
+        checkUserOut();
+    }
 });
 
 submitButton.addEventListener("click", () => {
@@ -535,6 +605,12 @@ textInput.addEventListener("keydown", (trigger) => {
 });
 
 chatArea.addEventListener("click", async function (trigger) {
+    let clickedElement = trigger.target;
+    const clickedClassesArray = Array.from(clickedElement.classList);
+    function interactionRatingManager(starElement) {
+        CSAT = parseInt(starElement.id.split('-')[1]);
+
+    }
     async function buttonActionManager(actualButton) {
         const hiddenText = actualButton.querySelector(".texto-oculto");
         if (hiddenText) {
@@ -571,8 +647,11 @@ chatArea.addEventListener("click", async function (trigger) {
                             }
                         });
                     });
-                } else {
-                    return "Action " + actionType + " not found";
+                }
+                if (actionType === "rateTheChat") {
+                    return await new Promise((resolve) => {
+                        xcallyWebSocket.emit("chatRating", "CSAT", CSAT)
+                    })
                 }
             } catch (error) {
                 console.error(error.message);
@@ -582,18 +661,14 @@ chatArea.addEventListener("click", async function (trigger) {
         return await sendMsg(actualButton.textContent.trim(), "silentMode", "buttonMode");
 
     }
-    let clickedElement = trigger.target;
-    const possibleClasses = ["texto-botones", "contenedor-boton"];
-    const clickedClassesArray = Array.from(clickedElement.classList);
-    const isChatButton = possibleClasses.some(validClass => clickedClassesArray.includes(validClass));
-    const buttonGroupContainer = clickedElement.closest('[id^="chat-menu-"]');
-    if (buttonGroupContainer) {
-        const containerIdNumber = parseInt(buttonGroupContainer.id.split('-').pop());
-        if (containerIdNumber !== currentIdForChatButtons) {
-            return;
+    async function clickedButtonManager() {
+        const buttonGroupContainer = clickedElement.closest('[id^="chat-menu-"]');
+        if (buttonGroupContainer) {
+            const containerIdNumber = parseInt(buttonGroupContainer.id.split('-').pop());
+            if (containerIdNumber !== currentIdForChatButtons) {
+                return;
+            }
         }
-    }
-    if (isChatButton) {
         let buttonUseFlag = "";
         switch (true) {
             case clickedClassesArray.includes("button-root"): {
@@ -619,6 +694,19 @@ chatArea.addEventListener("click", async function (trigger) {
         } else {
             console.log(buttonUseFlag);
         }
+    }
+    function clickedElementClassChecker(classesArray) {
+        return classesArray.some(validClass => clickedClassesArray.includes(validClass));
+
+    }
+    if (clickedElementClassChecker(["texto-botones", "contenedor-boton"])) {
+        clickedButtonManager();
+    };
+    if (clickedElementClassChecker(["stars"])) {
+        interactionRatingManager(clickedElement);
+    }
+    if (Array.from(trigger.target.parentElement.classList).includes("stars")) {
+        interactionRatingManager(trigger.target.parentElement);
     }
 });
 
