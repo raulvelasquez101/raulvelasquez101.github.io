@@ -1,6 +1,6 @@
 let chatPopup = document.querySelector(".chat-popup"),
     openChatButton = document.querySelector(".start-button-image"),
-    submitButton = document.getElementById("cht-wndw-sbmt"),
+    submitButton = document.getElementById("button-submit-text"),
     chatArea = document.querySelector(".chat-area"),
     closeChatButton = document.getElementById("chat-popup-button-close"),
     textInput = document.querySelector(".input-area-text"),
@@ -17,7 +17,19 @@ let chatPopup = document.querySelector(".chat-popup"),
     chatCoverVideo = document.getElementById("chat-cover-video"),
     chatCoverMessageContainer = document.getElementById("chat-cover-message-container"),
     chatCoverWaitMessage = document.getElementById("chat-cover-wait-message"),
-    chatCoverCloseMessage = document.getElementById("chat-cover-close-message");
+    chatCoverCloseMessage = document.getElementById("chat-cover-close-message"),
+    inputArea = document.querySelector('.chat-input-wrapper'),
+    stateIdle = document.getElementById('state-idle'),
+    stateRecording = document.getElementById('state-recording'),
+    statePaused = document.getElementById('state-paused'),
+    startRecordingButton = document.getElementById('button-start-record'),
+    pauseRecordingButton = document.getElementById('button-pause-recording'),
+    resumeRecordingButton = document.getElementById('button-resume-recording'),
+    deleteRecordingButton = document.getElementById('button-delete-recording'),
+    deletePausedRecordingButton = document.getElementById('button-delete-paused'),
+    sendRecordingButton = document.getElementById('button-send-recording'),
+    sendPausedRecordingButton = document.getElementById('button-send-paused'),
+    playRecordingButton = document.getElementById('button-play-recording');
 
 let xcallyWebSocket = null;
 let userID; // this is used to identify the user on the CC server;
@@ -25,6 +37,12 @@ let chatIntervalID = { closeInterval: null, openInterval: null };
 let ongoingChat = false;
 let currentIdForChatButtons = 1;
 let previousEstablishedConversationSocketId = null;
+let timerInterval = null;
+let seconds = 0;
+let recorder = null;
+let audioBlob = null;
+let audioURL = null;
+let audioElement = new Audio();
 
 function serverConnect() {
     function appendMessage(text) {
@@ -121,8 +139,8 @@ function serverConnect() {
             makeDisabledTextInput(true);
         }
     }
-    xcallyWebSocket = io("https://cx.oltpsys.com", {
-        path: "/webChat/chatSocket/",
+    xcallyWebSocket = io("https://serviciosxcally.bancoplaza.com", {
+        path: "/dev/webChat/chatSocket/",
         timeout: 2000,
         reconnectionAttempts: 5
     });
@@ -267,11 +285,19 @@ function makeDisabledTextInput(disable) {
     if (disable) {
         textInput.disabled = true;
         textInput.placeholder = ""
-        textInput.classList.add("make-opaque");
+        inputArea.classList.add("make-opaque");
+        buttonsInInputArea = inputArea.querySelectorAll('button');
+        buttonsInInputArea.forEach(button => {
+            button.disabled = true;
+        })
     } else {
         textInput.disabled = false;
         textInput.placeholder = "Escribe tu pregunta"
-        textInput.classList.remove("make-opaque");
+        inputArea.classList.remove("make-opaque");
+        buttonsInInputArea = inputArea.querySelectorAll('button');
+        buttonsInInputArea.forEach(button => {
+            button.disabled = false;
+        })
     }
 }
 
@@ -309,6 +335,44 @@ function sendMsg(textMessage, silentMode, buttonMode) {
 
 function updateScroll() {
     chatArea.scrollTop = chatArea.scrollHeight;
+};
+
+function setState(stateName) {
+    stateIdle.classList.remove('active-state');
+    stateRecording.classList.remove('active-state');
+    statePaused.classList.remove('active-state');
+    if (stateName === 'idle') {
+        stateIdle.classList.add('active-state');
+        document.getElementById('rec-timer').innerText = '0:00';
+        seconds = 0;
+    }
+    if (stateName === 'recording') stateRecording.classList.add('active-state');
+    if (stateName === 'paused') statePaused.classList.add('active-state');
+
+};
+
+function sendRecording() {
+    console.log("SENDING AUDIO");
+    clearInterval(timerInterval);
+    seconds = 0;
+    setState('idle');
+    textInput.value = '';
+};
+
+function deleteRecording() {
+    clearInterval(timerInterval);
+    seconds = 0;
+    setState('idle');
+};
+
+function startTimer(elementId) {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        document.getElementById(elementId).innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }, 1000);
 }
 
 function checkUserOut(tempTimeoutOrInterval) {
@@ -321,42 +385,6 @@ function checkUserOut(tempTimeoutOrInterval) {
     chatCoverContentHandler("hide wait and close messages")
     ongoingChat = false;
     xcallyWebSocket != null ? xcallyWebSocket.disconnect() : null;
-}
-
-function moveSubmitUp() {
-    const elem = document.getElementById("cht-wndw-sbmt");
-    if (elem.style.bottom != "0px") {
-        let id = null;
-        let pos = -30;
-        clearInterval(id);
-        id = setInterval(frame, 5);
-        function frame() {
-            if (pos == 0) {
-                clearInterval(id);
-            } else {
-                pos++;
-                elem.style.bottom = pos + "px";
-            }
-        }
-    }
-}
-
-function moveSubmitDown() {
-    if (textInput.value?.trim() === "") {
-        let id = null;
-        const elem = document.getElementById("cht-wndw-sbmt");
-        let pos = 0;
-        clearInterval(id);
-        id = setInterval(frame, 5);
-        function frame() {
-            if (pos == -30) {
-                clearInterval(id);
-            } else {
-                pos--;
-                elem.style.bottom = pos + "px";
-            }
-        }
-    }
 }
 
 function chatCoverContentHandler(action) {
@@ -440,6 +468,8 @@ function chatStarter() {
     }
 }
 
+
+
 chatCoverListDropdownMenu.addEventListener('click', function (event) {
     if (event.target.classList.contains('dropdown-item')) {
         chatCoverListValue.textContent = event.target.textContent;
@@ -508,14 +538,20 @@ openChatButtonText.addEventListener("click", () => {
 });
 
 closeChatButton.addEventListener("click", () => {
-    chatCoverContentHandler("pause and reset video")
+    chatCoverContentHandler("pause and reset video");
+    setState('idle');
     checkUserOut();
 });
 
 submitButton.addEventListener("click", () => {
-    let userInput = textInput.value;
-    sendMsg(userInput);
-    moveSubmitDown();
+    if (textInput.value.trim() !== '') {
+        let userInput = textInput.value;
+        sendMsg(userInput);
+    }
+});
+
+textInput.addEventListener('focus', () => {
+    if (textInput.value.trim() !== '') setState('idle');
 });
 
 textInput.addEventListener("input", function (event) {
@@ -530,9 +566,77 @@ textInput.addEventListener("keydown", (trigger) => {
     if (trigger.key === "Enter") {
         let userInput = textInput.value;
         sendMsg(userInput);
-        moveSubmitDown();
     }
 });
+
+startRecordingButton.addEventListener('click', () => {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        recorder = RecordRTC(stream, {
+            type: 'audio',
+            mimeType: 'audio/wav',
+            recorderType: StereoAudioRecorder,
+            sampleRate: 16000,
+            numberOfAudioChannels: 1,
+            desiredSampleRate: 16000
+        });
+        if (audioURL) URL.revokeObjectURL(audioURL);
+        audioURL = null;
+        audioBlob = null;
+        recorder.startRecording();
+        setState('recording');
+        startTimer('rec-timer');
+    }).catch((err) => {
+        console.error("Microphone permission denied:", err);
+        alert("Por favor, permite el acceso a tu micrófono para grabar un audio");
+    })
+});
+
+pauseRecordingButton.addEventListener('click', () => {
+    if (recorder) {
+        recorder.pauseRecording();
+        recorder.stopRecording(() => {
+            audioBlob = recorder.getBlob();
+            if (audioURL) URL.revokeObjectURL(audioURL);
+            audioURL = URL.createObjectURL(audioBlob);
+            audioElement.src = audioURL;
+        })
+        clearInterval(timerInterval);
+        document.getElementById('paused-timer').innerText = document.getElementById('rec-timer').innerText;
+        setState('paused');
+    }
+});
+
+resumeRecordingButton.addEventListener('click', () => {
+    if (recorder) {
+        if (audioURL){
+            URL.revokeObjectURL(audioURL);
+            audioURL = null;
+            audioBlob = null;
+        }
+        recorder.resumeRecording();
+        setState('recording');
+        startTimer('rec-timer');
+    }
+});
+
+sendRecordingButton.addEventListener('click', sendRecording);
+
+sendPausedRecordingButton.addEventListener('click', sendRecording);
+
+deleteRecordingButton.addEventListener('click', deleteRecording);
+
+deletePausedRecordingButton.addEventListener('click', deleteRecording);
+
+
+playRecordingButton.addEventListener('click', () => {
+    if (!audioURL) return;
+    if (audioElement.paused){
+        audioElement.currentTime = 0;
+        audioElement.play();
+    } else {
+        audioElement.pause();
+    }
+})
 
 chatArea.addEventListener("click", async function (trigger) {
     async function buttonActionManager(actualButton) {
@@ -621,6 +725,3 @@ chatArea.addEventListener("click", async function (trigger) {
         }
     }
 });
-
-textInput.addEventListener("focus", moveSubmitUp);
-textInput.addEventListener("blur", moveSubmitDown);

@@ -8,7 +8,7 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
         integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
         crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/recordrtc@5.6.2/RecordRTC.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
@@ -307,19 +307,88 @@
                     </div>
                 </div>
                 <div class="chat-area"></div>
-                <div class="input-area">
+                <div class="chat-input-wrapper">
                     <input type="text" class="input-area-text" placeholder="Escribe tu pregunta" id="cht-wndw-txt-ntr"
                         maxlength="425" />
-                    <button class="input-area-submit" id="cht-wndw-sbmt">
-                        <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960"
-                            width="20px" fill="#1f1f1f">
-                            <path
-                                d="M144-192v-576l720 288-720 288Zm72-107 454-181-454-181v109l216 72-216 72v109Zm0 0v-362 362Z" />
-                        </svg>
-                    </button>
+                    <div class="input-area-buttons state-idle active-state" id="state-idle">
+                        <button class="icon-button mic-button" id="button-start-record">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M408-453.92q-29-30.91-29-75.08v-251q0-41.67 29.44-70.83Q437.88-880 479.94-880t71.56 29.17Q581-821.67 581-780v251q0 44.17-29 75.08Q523-423 480-423t-72-30.92ZM480-651Zm-30 531v-136q-106-11-178-89t-72-184h60q0 91 64.29 153t155.5 62q91.21 0 155.71-62Q700-438 700-529h60q0 106-72 184t-178 89v136h-60Zm59.5-376.5Q521-510 521-529v-251q0-17-11.79-28.5T480-820q-17.42 0-29.21 11.5T439-780v251q0 19 11.5 32.5T480-483q18 0 29.5-13.5Z" />
+                            </svg>
+                        </button>
+                        <button class="icon-button send-button" id="button-submit-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M120-160v-640l760 320-760 320Zm66.67-102 520.66-218-520.66-220v158.67L428-480l-241.33 60v158Zm0 0v-438 438Z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-area-buttons state-recording" id="state-recording">
+                        <button class="icon-button danger-button" id="button-delete-recording">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M267.33-120q-27.5 0-47.08-19.58-19.58-19.59-19.58-47.09V-740H160v-66.67h192V-840h256v33.33h192V-740h-40.67v553.33q0 27-19.83 46.84Q719.67-120 692.67-120H267.33Zm425.34-620H267.33v553.33h425.34V-740Zm-328 469.33h66.66v-386h-66.66v386Zm164 0h66.66v-386h-66.66v386ZM267.33-740v553.33V-740Z" />
+                            </svg>
+                        </button>
+                        <div class="rec-timer-container">
+                            <div class="rec-dot"></div>
+                            <span id="rec-timer">0:00</span>
+                        </div>
+                        <button class="icon-button primary-button" id="button-pause-recording">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M523.33-200v-560H760v560H523.33ZM200-200v-560h236.67v560H200Zm390-66.67h103.33v-426.66H590v426.66Zm-323.33 0H370v-426.66H266.67v426.66Zm0-426.66v426.66-426.66Zm323.33 0v426.66-426.66Z" />
+                            </svg>
+                        </button>
+                        <button class="icon-button primary-button" id="button-send-recording">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M120-160v-640l760 320-760 320Zm66.67-102 520.66-218-520.66-220v158.67L428-480l-241.33 60v158Zm0 0v-438 438Z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-area-buttons state-paused" id="state-paused">
+                        <button class="icon-button danger-button" id="button-delete-paused">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M267.33-120q-27.5 0-47.08-19.58-19.58-19.59-19.58-47.09V-740H160v-66.67h192V-840h256v33.33h192V-740h-40.67v553.33q0 27-19.83 46.84Q719.67-120 692.67-120H267.33Zm425.34-620H267.33v553.33h425.34V-740Zm-328 469.33h66.66v-386h-66.66v386Zm164 0h66.66v-386h-66.66v386ZM267.33-740v553.33V-740Z" />
+                            </svg>
+                        </button>
+                        <button class="icon-button primary-button" id="button-play-recording">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M320-202v-560l440 280-440 280Zm66.67-280Zm0 158.67L636-482 386.67-640.67v317.34Z" />
+                            </svg>
+                        </button>
+                        <div class="paused-dot"></div>
+                        <span id="paused-timer">0:02</span>
+                        <button class="icon-button primary-button" id="button-resume-recording">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M408-453.92q-29-30.91-29-75.08v-251q0-41.67 29.44-70.83Q437.88-880 479.94-880t71.56 29.17Q581-821.67 581-780v251q0 44.17-29 75.08Q523-423 480-423t-72-30.92ZM480-651Zm-30 531v-136q-106-11-178-89t-72-184h60q0 91 64.29 153t155.5 62q91.21 0 155.71-62Q700-438 700-529h60q0 106-72 184t-178 89v136h-60Zm59.5-376.5Q521-510 521-529v-251q0-17-11.79-28.5T480-820q-17.42 0-29.21 11.5T439-780v251q0 19 11.5 32.5T480-483q18 0 29.5-13.5Z" />
+                            </svg>
+                        </button>
+                        <button class="icon-button primary-button" id="button-send-paused">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"
+                                fill="#1f1f1f">
+                                <path
+                                    d="M120-160v-640l760 320-760 320Zm66.67-102 520.66-218-520.66-220v158.67L428-480l-241.33 60v158Zm0 0v-438 438Z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+        <script src="audio-recorder.js"></script>
         <script src="chat_window_app.js"></script>
     </section>
 </body>

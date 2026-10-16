@@ -106,11 +106,12 @@
   width: clamp(400px, calc(100% - 70vw), 500px);
   padding: 0px;
   box-shadow: 0px 0px 5px grey;
+  transition: 0.3s ease;
 }
 
 .chat-window .chat-popup-toolbar {
   margin: 0;
-  background-color: #80bd01;
+  background-color: #047832;
   display: flex;
   align-items: center;
   direction: rtl;
@@ -154,6 +155,8 @@
 
 .chat-window .super-chat-area {
   background-color: #ffffff;
+  background-image: url(chat-background.jpg);
+  background-size: 500px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -191,7 +194,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #80bd01;
+  background-color: #047832;
   color: #fafafa;
   padding: 8px;
   border-radius: 5px;
@@ -230,27 +233,29 @@
   border-left: none;
 }
 
-.chat-window .input-area-submit {
-  background: none;
+#button-submit-text {
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 5px;
+  border-radius: 50%;
   opacity: 0.7;
-  position: relative;
-  left: 5px;
-  bottom: -30px;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: 10px;
+  transition: opacity 0.2s;
 }
 
-.chat-window .send-icon {
+.chat-window .send-icon,
+.chat-window .mic-icon {
   fill: #15552b;
   height: 32px;
   width: 32px;
 }
 
 .chat-window .start-button-image-container:hover,
-.chat-window .input-area-submit:hover,
+.chat-window .button-submit-text:hover,
 .chat-window .close-button {
   opacity: 0.8;
 }
@@ -258,39 +263,41 @@
 .chat-window .server-message-container,
 .chat-window .list-in-chat {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
-.chat-window .list-in-chat{
+.chat-window .list-in-chat {
   flex-direction: column;
 }
 
-.chat-window .list-header{
+.chat-window .list-header {
   font-size: 14px;
   text-align: center;
 }
 
-.chat-window .proper-list{
+.chat-window .proper-list {
   padding-top: 12px;
   padding-bottom: 12px;
   padding-right: 16px;
   padding-left: 16px;
 }
 
-.chat-window .list-item{
+.chat-window .list-item {
   font-size: 14px;
 }
 
 .chat-window .server-message,
 .chat-window .list-in-chat {
   font-size: 14px;
-  background-color: #047832;
+  background-color: #fafafa;
+  border: solid 1px #047832;
+  max-width: 80%;
   padding-top: 12px;
   padding-bottom: 12px;
   padding-right: 16px;
   padding-left: 16px;
   border-radius: 32px;
-  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
   text-align: justify;
   margin: 8px;
   word-spacing: 2.4px;
@@ -301,24 +308,24 @@
   font-size: 14px;
   text-align: justify;
   word-spacing: 2.4px;
-  color: #fafafa;
+  color: black;
 }
 
 .chat-window .user-message-container {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .chat-window .user-message {
   display: flex;
-  justify-content: flex-end;
   font-size: 14px;
   padding-top: 12px;
   padding-bottom: 12px;
   padding-right: 16px;
   padding-left: 16px;
   border-radius: 32px;
-  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
   background-color: #61a60e;
   margin: 8px;
   text-align: justify;
@@ -395,7 +402,9 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 5px;
-  width: 100%;
+  background-color: #b0dfc2;
+  padding: 5px 0px 5px 0px;
+  border-radius: 10px;
 }
 
 .contenedor-menu-N-botones .contenedor-boton.button-parent {
@@ -405,6 +414,7 @@
   border: 1px solid #047832;
   cursor: pointer;
   flex-wrap: wrap;
+  border-radius: 5px;
 }
 
 .contenedor-menu-N-botones .contenedor-boton.button-parent .texto-botones {
@@ -432,8 +442,8 @@
 }
 
 .chat-window .texto-botones:hover,
-.chat-window .btn-img,
-.chat-window .contenedores-btns-menu {
+.chat-window .button-img,
+.chat-window .contenedores-buttons-menu {
   cursor: pointer;
 }
 
@@ -446,9 +456,9 @@
   padding-bottom: 4px;
 }
 
-.chat-window .btn-si,
-.chat-window .btn-no,
-.chat-window .btn-agente {
+.chat-window .button-si,
+.chat-window .button-no,
+.chat-window .button-agente {
   margin: 1.6px;
   font-size: 14.4px;
 }
@@ -482,7 +492,6 @@
   max-height: 32px;
   padding: 8px;
   background-color: white;
-  margin-right: 45px;
 }
 
 .chat-window .make-opaque {
@@ -584,7 +593,7 @@
   border: 1px solid black;
 }
 
-.image-in-chat{
+.image-in-chat {
   margin-top: 8px;
   margin-bottom: 8px;
 }
@@ -620,4 +629,124 @@
 
 #chat-cover-close-message span {
   font-size: 48px;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  height: 60px;
+  /* Fixed height prevents jumping */
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 30px;
+  /* Pill shape */
+  background: #fff;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.input-area-text {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: transparent;
+  height: 100%;
+}
+
+.input-area-buttons {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+}
+
+.input-area-buttons.active-state {
+  display: flex;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Icon Buttons */
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+  fill: #15552b;
+}
+
+.icon-button:hover {
+  background: #f0f0f0;
+}
+
+/* Button Colors */
+.danger-button svg {
+  fill: #d32f2f;
+}
+
+.primary-button svg {
+  fill: #15552b;
+}
+
+.primary-button {
+  background: #c8e6c9;
+}
+
+/* Greenish background for main actions */
+
+/* Timer Dots */
+.rec-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #d32f2f;
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: blink 1s infinite;
+}
+
+.paused-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #d32f2f;
+  border-radius: 50%;
+  margin-right: 5px;
+  /* No animation when paused */
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Timers and Waveforms */
+#rec-timer,
+#paused-timer {
+  font-family: monospace;
+  font-size: 16px;
+  color: #333;
+  margin-right: 15px;
 }
